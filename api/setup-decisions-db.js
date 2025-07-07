@@ -7,8 +7,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Drop the old table if it exists to avoid schema conflicts
+    await sql`DROP TABLE IF EXISTS decisions`;
+    
     await sql`
-      CREATE TABLE IF NOT EXISTS decisions (
+      CREATE TABLE decisions (
         id SERIAL PRIMARY KEY,
         message_id VARCHAR(255) UNIQUE,
         thread_id VARCHAR(255),
