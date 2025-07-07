@@ -5,6 +5,22 @@ import { verifySlackRequest } from './verify.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Helper to get raw body
+async function getRawBody(req) {
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+// Disable Vercel's body parser for this endpoint
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 async function getSlackToken(teamId) {
   const { rows } = await sql`
     SELECT bot_token FROM slack_installations WHERE team_id = ${teamId}
@@ -50,8 +66,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const rawBody = await getRawBody(req);
+  let body;
+  
   try {
-    const { type, challenge, event, command, team_id, user_id, channel_id, text } = req.body;
+    // Try parsing as JSON first (for events)
+    body = JSON.parse(rawBody);
+  } catch {
+    // If JSON parsing fails, parse as form data (for slash commands)
+    body = Object.fromEntries(new URLSearchParams(rawBody));
+  }
+
+  try {
+    const { type, challenge, event, command, team_id, user_id, channel_id, text } = body;
 
     // Handle URL verification (skip signature verification for this)
     if (type === 'url_verification') {
@@ -61,7 +88,6 @@ export default async function handler(req, res) {
     // Verify request signature for security (for all other requests)
     const signature = req.headers['x-slack-signature'];
     const timestamp = req.headers['x-slack-request-timestamp'];
-    const rawBody = JSON.stringify(req.body);
     
     if (!verifySlackRequest(rawBody, signature, timestamp)) {
       return res.status(401).json({ error: 'Invalid signature' });
