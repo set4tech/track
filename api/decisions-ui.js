@@ -4,22 +4,23 @@ export default async function handler(req, res) {
   try {
     const { team_id } = req.query;
     
-    let query = sql`
-      SELECT * FROM decisions 
-      WHERE status = 'confirmed'
-    `;
+    let rows;
     
     if (team_id) {
-      query = sql`
+      const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed' AND slack_team_id = ${team_id}
+        ORDER BY confirmed_at DESC
       `;
+      rows = result.rows;
+    } else {
+      const result = await sql`
+        SELECT * FROM decisions 
+        WHERE status = 'confirmed'
+        ORDER BY confirmed_at DESC
+      `;
+      rows = result.rows;
     }
-    
-    const { rows } = await sql`
-      ${query}
-      ORDER BY confirmed_at DESC
-    `;
     
     const html = `
       <!DOCTYPE html>
