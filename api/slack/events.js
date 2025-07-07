@@ -67,18 +67,24 @@ export default async function handler(req, res) {
   }
 
   const rawBody = await getRawBody(req);
+  console.log('Raw body:', rawBody);
+  console.log('Headers:', req.headers);
+  
   let body;
   
   try {
     // Try parsing as JSON first (for events)
     body = JSON.parse(rawBody);
+    console.log('Parsed as JSON:', body);
   } catch {
     // If JSON parsing fails, parse as form data (for slash commands)
     body = Object.fromEntries(new URLSearchParams(rawBody));
+    console.log('Parsed as form data:', body);
   }
 
   try {
     const { type, challenge, event, command, team_id, user_id, channel_id, text } = body;
+    console.log('Extracted values:', { type, challenge, command, team_id, text });
 
     // Handle URL verification (skip signature verification for this)
     if (type === 'url_verification') {
