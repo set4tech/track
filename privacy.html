@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Decision Tracker</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            max-width: 800px; margin: 0 auto; padding: 40px 20px; 
+            background: #f8fafc; color: #1e293b; line-height: 1.6;
+        }
+        .header { background: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; }
+        h1 { color: #0f172a; margin-bottom: 10px; }
+        h2 { color: #374151; margin-top: 30px; }
+        .back-link { color: #667eea; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-link">← Back to Decision Tracker</a>
+        <h1>Privacy Policy</h1>
+        <p><em>Last updated: January 2025</em></p>
+    </div>
+
+    <h2>What We Collect</h2>
+    <p>Decision Tracker collects only the information necessary to provide our service:</p>
+    <ul>
+        <li><strong>Slack Messages:</strong> Only messages that contain decision-related keywords are processed</li>
+        <li><strong>User Information:</strong> Slack user IDs and workspace information for proper routing</li>
+        <li><strong>Decision Data:</strong> Confirmed decisions, including summary, participants, and context</li>
+        <li><strong>Email Content:</strong> When you CC our email address, we process the email content for decisions</li>
+    </ul>
+
+    <h2>How We Use Your Data</h2>
+    <p>Your data is used exclusively to:</p>
+    <ul>
+        <li>Detect and extract decision information from your messages</li>
+        <li>Store confirmed decisions in your workspace's private database</li>
+        <li>Provide search and retrieval functionality</li>
+        <li>Send confirmation requests and notifications</li>
+    </ul>
+
+    <h2>Data Isolation</h2>
+    <p>Each Slack workspace's data is completely isolated. Teams cannot access each other's decisions or data. All database queries are filtered by workspace ID to ensure complete separation.</p>
+
+    <h2>Data Storage</h2>
+    <p>Your data is stored securely using:</p>
+    <ul>
+        <li>Encrypted database connections</li>
+        <li>Secure cloud infrastructure (Vercel/PostgreSQL)</li>
+        <li>Access tokens encrypted at rest</li>
+        <li>Regular security updates and monitoring</li>
+    </ul>
+
+    <h2>Data Retention</h2>
+    <p>We retain your data as long as our app is installed in your workspace. When you uninstall the app, all associated data is automatically marked for deletion within 30 days.</p>
+
+    <h2>Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+        <li><strong>Access:</strong> Request a copy of your workspace's decision data</li>
+        <li><strong>Delete:</strong> Request deletion of specific decisions or all data</li>
+        <li><strong>Correct:</strong> Request correction of inaccurate decision information</li>
+        <li><strong>Export:</strong> Request your data in a portable format</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <p>We use these third-party services:</p>
+    <ul>
+        <li><strong>OpenAI:</strong> For decision detection and extraction (data is not stored by OpenAI)</li>
+        <li><strong>SendGrid:</strong> For sending confirmation emails</li>
+        <li><strong>Vercel:</strong> For hosting and infrastructure</li>
+        <li><strong>PostgreSQL:</strong> For secure data storage</li>
+    </ul>
+
+    <h2>Contact Us</h2>
+    <p>For privacy-related questions or requests, contact us at:</p>
+    <p><strong>Email:</strong> privacy@set4.io<br>
+    <strong>Response Time:</strong> Within 72 hours</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. We will notify users of any material changes through the app or email.</p>
+</body>
+</html>

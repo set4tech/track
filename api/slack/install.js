@@ -45,6 +45,23 @@ export default async function handler(req, res) {
           installed_at = NOW()
       `;
 
+      // Send welcome message to the installing user
+      try {
+        await fetch('https://slack.com/api/chat.postMessage', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${data.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            channel: data.authed_user.id,
+            text: `🎉 Welcome to Decision Tracker!\n\nI'm here to help your team track important decisions automatically.\n\n*Quick Start:*\n• Type \`/decisions help\` to see available commands\n• Make decisions naturally in your messages (e.g., "We decided to use React")\n• I'll ask for confirmation when I detect decisions\n• Use \`/decisions\` to see recent decisions\n\nQuestions? Visit https://track-set4.vercel.app/support\n\nHappy decision tracking! 📋`,
+          }),
+        });
+      } catch (welcomeError) {
+        console.error('Failed to send welcome message:', welcomeError);
+      }
+
       // Redirect to success page
       res.redirect('/slack-success.html');
     } catch (error) {

@@ -34,6 +34,7 @@ export default async function handler(req, res) {
         <div class="header">
             <h1>📋 Decision Tracker for Slack</h1>
             <p>Automatically track and organize team decisions in Slack</p>
+            <p><small>Join thousands of teams already using Decision Tracker</small></p>
             
             <a href="https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=channels:history,chat:write,commands,users:read&redirect_uri=${encodeURIComponent(redirectUri)}" class="install-btn">
                 Add to Slack
