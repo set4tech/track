@@ -1,6 +1,11 @@
 import { sql } from '@vercel/postgres';
 
 export default async function handler(req, res) {
+  // Allow both GET and POST for setup
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS decisions (
