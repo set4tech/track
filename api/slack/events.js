@@ -1,6 +1,7 @@
 import { sql } from '@vercel/postgres';
 import OpenAI from 'openai';
 import crypto from 'crypto';
+import { verifySlackRequest } from './verify.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -50,6 +51,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verify request signature for security
+    const signature = req.headers['x-slack-signature'];
+    const timestamp = req.headers['x-slack-request-timestamp'];
+    const rawBody = JSON.stringify(req.body);
+    
+    if (!verifySlackRequest(rawBody, signature, timestamp)) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
     const { type, challenge, event, command, team_id, user_id, channel_id, text } = req.body;
 
     // Handle URL verification

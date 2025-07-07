@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -8,6 +9,9 @@ export default async function handler(req, res) {
     if (!code) {
       return res.status(400).json({ error: 'Missing authorization code' });
     }
+    
+    // For production, you should validate the state parameter against a stored value
+    // This is a simplified implementation
 
     try {
       // Exchange code for access token

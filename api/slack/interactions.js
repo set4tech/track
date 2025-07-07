@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { verifySlackRequest } from './verify.js';
 
 async function getSlackToken(teamId) {
   const { rows } = await sql`
@@ -30,6 +31,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verify request signature for security
+    const signature = req.headers['x-slack-signature'];
+    const timestamp = req.headers['x-slack-request-timestamp'];
+    const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    
+    if (!verifySlackRequest(rawBody, signature, timestamp)) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
     // Parse the payload (Slack sends it as form data)
     const payload = JSON.parse(req.body.payload || req.body);
     const { type, user, team, actions, message, channel } = payload;

@@ -101,7 +101,8 @@ export default async function handler(req, res) {
         ${rows.length === 0 ? `
           <div class="empty">
             <h2>No confirmed decisions yet</h2>
-            <p>Send an email with a decision and CC <strong>decisions@bot.set4.io</strong> to get started!</p>
+            <p>Send an email with a decision and CC <strong>decisions@bot.set4.io</strong> or install the Slack bot to get started!</p>
+            <p><a href="/api/slack-install-page">📱 Install Slack Bot</a></p>
           </div>
         ` : ''}
         

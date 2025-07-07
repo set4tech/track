@@ -14,7 +14,6 @@
     "@vercel/postgres": "^0.10.0",
     "openai": "^5.8.2",
     "sendgrid": "^5.2.3",
-    "@slack/web-api": "^7.0.0",
-    "@slack/bolt": "^3.17.0"
+    "@slack/web-api": "^7.0.0"
   }
 }
