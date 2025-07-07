@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Tracker API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        code { background: #e8e8e8; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Decision Tracker API</h1>
+    <p>This service tracks decisions made via email and provides query capabilities.</p>
+    
+    <h2>Available Endpoints:</h2>
+    
+    <div class="endpoint">
+        <h3>POST /api/webhook-inbound</h3>
+        <p>Webhook endpoint for processing incoming emails. Logs decisions when CC'd and responds to queries when directly addressed.</p>
+    </div>
+    
+    <div class="endpoint">
+        <h3>GET /api/setup-db</h3>
+        <p>Sets up the decisions database table. Run this once to initialize the database.</p>
+    </div>
+    
+    <p><strong>Status:</strong> API is deployed and ready to receive webhooks.</p>
+</body>
+</html>

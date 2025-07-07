@@ -1,0 +1,17 @@
+{
+  "name": "track",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@vercel/postgres": "^0.10.0",
+    "sendgrid": "^5.2.3"
+  }
+}

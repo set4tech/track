@@ -1,0 +1,18 @@
+{
+    "functions": {
+      "api/*.js": {
+        "maxDuration": 10
+      }
+    },
+    "headers": [
+      {
+        "source": "/api/webhook-inbound",
+        "headers": [
+          {
+            "key": "X-Vercel-Protection-Bypass",
+            "value": "$VERCEL_PROTECTION_BYPASS"
+          }
+        ]
+      }
+    ]
+  }
