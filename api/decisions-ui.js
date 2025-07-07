@@ -64,8 +64,7 @@ export default async function handler(req, res) {
       </head>
       <body>
         <div class="nav">
-          <a href="/">🏠 Home</a>
-          <a href="/api/setup-decisions-db">⚙️ Setup Database</a>
+          <a href="/api/debug">🔧 Debug</a>
         </div>
         
         <div class="header">
