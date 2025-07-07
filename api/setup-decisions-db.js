@@ -30,12 +30,27 @@ export default async function handler(req, res) {
         parsed_context TEXT,
         confirmation_token VARCHAR(255) UNIQUE,
         confirmed_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        slack_team_id VARCHAR(255),
+        slack_channel_id VARCHAR(255),
+        slack_user_id VARCHAR(255)
       )
     `;
     
     await sql`CREATE INDEX IF NOT EXISTS idx_decisions_thread ON decisions(thread_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_confirmation ON decisions(confirmation_token)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_slack_team ON decisions(slack_team_id)`;
+    
+    await sql`
+      CREATE TABLE IF NOT EXISTS slack_installations (
+        id SERIAL PRIMARY KEY,
+        team_id VARCHAR(255) UNIQUE NOT NULL,
+        team_name VARCHAR(255),
+        bot_token VARCHAR(255) NOT NULL,
+        bot_user_id VARCHAR(255),
+        installed_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
     
     res.status(200).json({ message: 'Enhanced decisions table created successfully' });
   } catch (error) {

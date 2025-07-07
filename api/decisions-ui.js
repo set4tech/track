@@ -2,9 +2,22 @@ import { sql } from '@vercel/postgres';
 
 export default async function handler(req, res) {
   try {
-    const { rows } = await sql`
+    const { team_id } = req.query;
+    
+    let query = sql`
       SELECT * FROM decisions 
       WHERE status = 'confirmed'
+    `;
+    
+    if (team_id) {
+      query = sql`
+        SELECT * FROM decisions 
+        WHERE status = 'confirmed' AND slack_team_id = ${team_id}
+      `;
+    }
+    
+    const { rows } = await sql`
+      ${query}
       ORDER BY confirmed_at DESC
     `;
     

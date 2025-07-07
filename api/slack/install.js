@@ -1,0 +1,53 @@
+import { sql } from '@vercel/postgres';
+
+export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    // Handle OAuth callback
+    const { code, state } = req.query;
+    
+    if (!code) {
+      return res.status(400).json({ error: 'Missing authorization code' });
+    }
+
+    try {
+      // Exchange code for access token
+      const response = await fetch('https://slack.com/api/oauth.v2.access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: process.env.SLACK_CLIENT_ID,
+          client_secret: process.env.SLACK_CLIENT_SECRET,
+          code: code,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || 'OAuth exchange failed');
+      }
+
+      // Store installation in database
+      await sql`
+        INSERT INTO slack_installations (team_id, team_name, bot_token, bot_user_id)
+        VALUES (${data.team.id}, ${data.team.name}, ${data.access_token}, ${data.bot_user_id})
+        ON CONFLICT (team_id) 
+        DO UPDATE SET 
+          team_name = EXCLUDED.team_name,
+          bot_token = EXCLUDED.bot_token,
+          bot_user_id = EXCLUDED.bot_user_id,
+          installed_at = NOW()
+      `;
+
+      // Redirect to success page
+      res.redirect('/slack-success.html');
+    } catch (error) {
+      console.error('OAuth error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
+  }
+}
