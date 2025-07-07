@@ -22,10 +22,21 @@
     </div>
     
     <div class="endpoint">
-        <h3>GET /api/setup-db</h3>
-        <p>Sets up the decisions database table. Run this once to initialize the database.</p>
+        <h3>GET /api/setup-decisions-db</h3>
+        <p>Sets up the enhanced decisions database table with LLM processing support. Run this once to initialize the database.</p>
     </div>
     
-    <p><strong>Status:</strong> API is deployed and ready to receive webhooks.</p>
+    <div class="endpoint">
+        <h3>GET /api/decisions-ui</h3>
+        <p>View all confirmed decisions in a user-friendly interface.</p>
+    </div>
+    
+    <div class="endpoint">
+        <h3>GET /api/confirm-decision</h3>
+        <p>Confirmation endpoint for decision approval (accessed via email links).</p>
+    </div>
+    
+    <p><strong>Status:</strong> Enhanced API with LLM-powered decision extraction is deployed and ready!</p>
+    <p><strong>New:</strong> Decisions now require confirmation before being logged. Check your email after CCing the bot.</p>
 </body>
 </html>

@@ -12,6 +12,7 @@
   "type": "module",
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
+    "openai": "^5.8.2",
     "sendgrid": "^5.2.3"
   }
 }
