@@ -51,20 +51,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verify request signature for security
+    const { type, challenge, event, command, team_id, user_id, channel_id, text } = req.body;
+
+    // Handle URL verification (skip signature verification for this)
+    if (type === 'url_verification') {
+      return res.status(200).json({ challenge });
+    }
+
+    // Verify request signature for security (for all other requests)
     const signature = req.headers['x-slack-signature'];
     const timestamp = req.headers['x-slack-request-timestamp'];
     const rawBody = JSON.stringify(req.body);
     
     if (!verifySlackRequest(rawBody, signature, timestamp)) {
       return res.status(401).json({ error: 'Invalid signature' });
-    }
-
-    const { type, challenge, event, command, team_id, user_id, channel_id, text } = req.body;
-
-    // Handle URL verification
-    if (type === 'url_verification') {
-      return res.status(200).json({ challenge });
     }
 
     // Handle slash commands
