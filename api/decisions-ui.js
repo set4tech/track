@@ -94,9 +94,15 @@ export default async function handler(req, res) {
         ` : ''}
         
         ${rows.map(decision => {
-          const params = decision.parameters ? JSON.parse(decision.parameters) : {};
+          let params = {};
+          let parsedContext = {};
+          try {
+            params = typeof decision.parameters === 'string' ? JSON.parse(decision.parameters) : decision.parameters || {};
+            parsedContext = typeof decision.parsed_context === 'string' ? JSON.parse(decision.parsed_context) : decision.parsed_context || {};
+          } catch (e) {
+            console.error('JSON parse error:', e);
+          }
           const witnesses = decision.witnesses || [];
-          const parsedContext = decision.parsed_context ? JSON.parse(decision.parsed_context) : {};
           
           return `
             <div class="decision">
