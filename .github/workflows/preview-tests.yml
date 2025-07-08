@@ -20,16 +20,23 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         max_timeout: 300
         check_interval: 10
+      continue-on-error: true
     
     - name: Get Preview URL
       id: get-preview-url
       run: |
+        if [ -z "${{ steps.wait-for-preview.outputs.url }}" ]; then
+          echo "No Vercel preview deployment found. Skipping preview tests."
+          echo "url=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
         echo "url=${{ steps.wait-for-preview.outputs.url }}" >> $GITHUB_OUTPUT
         echo "Preview URL: ${{ steps.wait-for-preview.outputs.url }}"
 
   test-against-branch-db:
     needs: wait-for-vercel-preview
     runs-on: ubuntu-latest
+    if: needs.wait-for-vercel-preview.outputs.preview-url != ''
     
     steps:
     - uses: actions/checkout@v4
