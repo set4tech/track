@@ -21,6 +21,7 @@ VERCEL_PROTECTION_BYPASS=your_protection_bypass_token_here
 
 ## API Endpoints
 
+- `GET /` - View confirmed decisions (homepage)
 - `POST /api/webhook-inbound` - Webhook for processing incoming emails
 - `GET /api/setup-db` - Initialize database table
 
