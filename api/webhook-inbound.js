@@ -159,7 +159,10 @@ Return JSON with:
       await sgMail.send({
         to: from,
         cc: cc?.split(',').filter(email => !email.toLowerCase().includes(botEmail)).join(',') || undefined,
-        from: process.env.SENDER_EMAIL,
+        from: {
+          name: 'Decision Bot',
+          email: process.env.SENDER_EMAIL || 'decision@bot.set4.io'
+        },
         subject: `Re: ${subject}`,
         text: `I have logged this decision:
 
