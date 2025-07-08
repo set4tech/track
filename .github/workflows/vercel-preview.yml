@@ -26,11 +26,3 @@ jobs:
         SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY || 'SG.test_key_for_ci' }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test_key_for_ci' }}
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL || 'test@example.com' }}
-    
-    - name: Deploy to Vercel Preview
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.ORG_ID }}
-        vercel-project-id: ${{ secrets.PROJECT_ID }}
-        scope: ${{ secrets.VERCEL_ORG_ID }}
