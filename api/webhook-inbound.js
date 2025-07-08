@@ -2,6 +2,7 @@ import { sql } from '@vercel/postgres';
 import sgMail from '@sendgrid/mail';
 import OpenAI from 'openai';
 import crypto from 'crypto';
+import formidable from 'formidable';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -11,6 +12,13 @@ try {
 } catch (error) {
   console.error('SendGrid initialization error:', error);
 }
+
+// Disable Vercel's body parser for this endpoint
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 function extractEmailHeaders(headers) {
   // SendGrid provides headers as a string, parse it
@@ -24,25 +32,46 @@ function extractEmailHeaders(headers) {
   return headerObj;
 }
 
+async function parseFormData(req) {
+  return new Promise((resolve, reject) => {
+    const form = formidable({});
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      // formidable wraps fields in arrays, so we unwrap them
+      const unwrappedFields = {};
+      for (const key in fields) {
+        unwrappedFields[key] = fields[key][0];
+      }
+      resolve({ fields: unwrappedFields, files });
+    });
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { from, to, cc, subject, text, html, headers } = req.body;
-    const botEmail = 'decisions@bot.set4.io';
+    // Parse the multipart/form-data from SendGrid
+    const { fields } = await parseFormData(req);
+    console.log('Parsed email fields:', fields);
+    
+    const { from, to, cc, subject, text, html, headers } = fields;
+    const botEmail = 'decision@bot.set4.io';
     
     // Parse headers
     const headerObj = extractEmailHeaders(headers);
     const messageId = headerObj['Message-ID'] || crypto.randomBytes(16).toString('hex');
     const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
     
-    // Check if this is a new decision (CC) or query (TO)
-    const isCC = cc && cc.toLowerCase().includes(botEmail);
-    const isTO = to && to.toLowerCase().includes(botEmail);
+    // Check if bot is included (either CC or TO means process as decision)
+    const isBotIncluded = (cc && cc.toLowerCase().includes(botEmail)) || (to && to.toLowerCase().includes(botEmail));
     
-    if (isCC) {
+    if (isBotIncluded) {
       // Check if already processed
       const existing = await sql`
         SELECT id FROM decisions WHERE message_id = ${messageId}
@@ -64,7 +93,18 @@ export default async function handler(req, res) {
         model: "gpt-4-turbo-preview",
         messages: [{
           role: "system",
-          content: `Extract decision information from email threads. Return JSON with:
+          content: `Extract decision information from email threads. Decisions can be expressed in various ways:
+
+- Direct statements: "We will proceed with X", "I decide to do Y", "Let's go with option Z"
+- Confirmations: "Yes, confirmed", "Agreed", "That works", "Sounds good", "Let's do it"
+- Approvals: "Approved", "Go ahead", "Green light", "You have my approval"
+- Commitments: "I'll handle this", "We're committed to X", "Count me in"
+- Selections: "I choose A", "We'll go with B", "Option C is best"
+- Authorizations: "You're authorized to proceed", "Permission granted"
+
+Pay special attention to conversational context - a simple "yes" in response to "Should we do X?" is a decision.
+
+Return JSON with:
             - decision_summary: Clear, concise statement of what was decided (max 200 chars)
             - decision_maker: Email of person who made the decision (from the From field)
             - witnesses: Array of all other email addresses in the thread
@@ -92,111 +132,51 @@ export default async function handler(req, res) {
       });
       
       const parsed = JSON.parse(completion.choices[0].message.content);
+      console.log('OpenAI parsed result:', parsed);
       
       if (!parsed || parsed.confidence < 70) {
-        return res.status(200).json({ status: 'no_decision_found' });
+        console.log('Decision rejected - confidence too low:', parsed?.confidence);
+        return res.status(200).json({ status: 'no_decision_found', confidence: parsed?.confidence });
       }
       
-      // Generate confirmation token
-      const confirmToken = crypto.randomBytes(32).toString('hex');
-      
-      // Store decision (pending confirmation)
+      // Store decision (automatically confirmed)
       await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
           decision_date, topic, parameters, priority, decision_type,
           status, deadline, impact_scope, raw_thread, parsed_context,
-          confirmation_token
+          confirmed_at
         ) VALUES (
           ${messageId}, ${threadId}, ${parsed.decision_summary}, 
           ${parsed.decision_maker || from}, ${uniqueEmails.filter(e => e !== from)},
           ${parsed.decision_date || new Date()}, ${parsed.topic}, 
           ${JSON.stringify(parsed.parameters)}, ${parsed.priority}, 
-          ${parsed.decision_type}, 'pending_confirmation', ${parsed.deadline}, 
+          ${parsed.decision_type}, 'confirmed', ${parsed.deadline}, 
           ${parsed.impact_scope}, ${text}, ${JSON.stringify(parsed)},
-          ${confirmToken}
+          ${new Date()}
         )
-      `;
-      
-      // Send confirmation request
-      const confirmUrl = `https://track-set4.vercel.app/api/confirm-decision?token=${confirmToken}`;
-      
+      `;      // Reply in the same thread to confirm decision was logged
       await sgMail.send({
         to: from,
-        from: process.env.SENDER_EMAIL,
-        subject: `Please Confirm Decision: ${parsed.topic}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Decision Recorded - Please Confirm</h2>
-            
-            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">${parsed.decision_summary}</h3>
-              
-              <p><strong>Type:</strong> ${parsed.decision_type} (${parsed.priority} priority)</p>
-              <p><strong>Impact:</strong> ${parsed.impact_scope}</p>
-              ${parsed.deadline ? `<p><strong>Deadline:</strong> ${new Date(parsed.deadline).toLocaleDateString()}</p>` : ''}
-              
-              <h4>Key Points:</h4>
-              <ul>
-                ${parsed.key_points?.map(point => `<li>${point}</li>`).join('') || '<li>No key points extracted</li>'}
-              </ul>
-              
-              ${Object.keys(parsed.parameters || {}).length > 0 ? `
-                <h4>Parameters:</h4>
-                <ul>
-                  ${Object.entries(parsed.parameters).map(([k,v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('')}
-                </ul>
-              ` : ''}
-              
-              <p><strong>Witnesses:</strong> ${uniqueEmails.filter(e => e !== from).join(', ') || 'None'}</p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" style="background: #22c55e; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                ✓ Confirm This Decision
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px;">
-              If this wasn't a decision or was incorrectly captured, simply ignore this email.
-              Only confirmed decisions will be stored in the decision log.
-            </p>
-            
-            <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-            <p style="color: #999; font-size: 12px;">Thread ID: ${threadId}</p>
-          </div>
-        `
+        cc: cc?.split(',').filter(email => !email.toLowerCase().includes(botEmail)).join(',') || undefined,
+        from: {
+          name: 'Decision Bot',
+          email: process.env.SENDER_EMAIL || 'decision@bot.set4.io'
+        },
+        subject: `Re: ${subject}`,
+        text: `I have logged this decision:
+
+"${parsed.decision_summary}"
+
+Type: ${parsed.decision_type} (${parsed.priority} priority)
+Impact: ${parsed.impact_scope}
+${parsed.deadline ? `Deadline: ${new Date(parsed.deadline).toLocaleDateString()}\n` : ''}${parsed.key_points?.length ? `\nKey Points:\n${parsed.key_points.map(point => `• ${point}`).join('\n')}` : ''}
+
+View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
       });
       
       res.status(200).json({ status: 'success', decision: parsed });
       
-    } else if (isTO) {
-      // Query for confirmed decisions
-      const { rows } = await sql`
-        SELECT * FROM decisions 
-        WHERE status = 'confirmed'
-        ORDER BY confirmed_at DESC 
-        LIMIT 10
-      `;
-      
-      let response = `Here are your recent confirmed decisions:\n\n`;
-      rows.forEach((row, i) => {
-        response += `${i+1}. ${row.decision_summary}\n`;
-        response += `   Topic: ${row.topic}\n`;
-        response += `   Date: ${new Date(row.decision_date).toLocaleDateString()}\n`;
-        response += `   Type: ${row.decision_type} (${row.priority})\n\n`;
-      });
-      
-      if (rows.length === 0) {
-        response = 'No confirmed decisions found yet.';
-      }
-      
-      await sgMail.send({
-        to: from,
-        from: process.env.SENDER_EMAIL,
-        subject: `Re: ${subject}`,
-        text: response
-      });
     }
     
     res.status(200).json({ received: true });
