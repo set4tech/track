@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '../../lib/database.js';
 import OpenAI from 'openai';
 import crypto from 'crypto';
 import { verifySlackRequest } from './verify.js';
