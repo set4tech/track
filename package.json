@@ -17,7 +17,8 @@
     "db:sqlite:remove": "node scripts/sqlite-setup.js remove",
     "start:local": "npm run db:start && npm run seed && npm test",
     "db:migrate": "node scripts/migrate.js",
-    "db:migrate:create": "node scripts/create-migration.js"
+    "db:migrate:create": "node scripts/create-migration.js",
+    "sendgrid:setup": "node scripts/setup-sendgrid-inbound.js"
   },
   "keywords": [],
   "author": "",

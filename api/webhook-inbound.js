@@ -2,6 +2,7 @@ import { sql } from '../lib/database.js';
 import sgMail from '@sendgrid/mail';
 import OpenAI from 'openai';
 import crypto from 'crypto';
+import { getConfig } from '../lib/config.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +32,16 @@ export default async function handler(req, res) {
 
   try {
     const { from, to, cc, subject, text, html, headers } = req.body;
-    const botEmail = 'decisions@bot.set4.io';
+    const config = getConfig();
+    const botEmail = config.inboundEmail;
+    
+    console.log(`📧 Webhook received on ${config.environment}:`, {
+      to,
+      cc,
+      from,
+      botEmail,
+      environment: config.environment
+    });
     
     // Parse headers
     const headerObj = extractEmailHeaders(headers);
@@ -39,8 +49,22 @@ export default async function handler(req, res) {
     const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
     
     // Check if this is a new decision (CC) or query (TO)
-    const isCC = cc && cc.toLowerCase().includes(botEmail);
-    const isTO = to && to.toLowerCase().includes(botEmail);
+    const isCC = cc && cc.toLowerCase().includes(botEmail.split('+')[0]);
+    const isTO = to && to.toLowerCase().includes(botEmail.split('+')[0]);
+    
+    // Determine environment from email address
+    let detectedEnvironment = 'production';
+    const recipients = `${to || ''} ${cc || ''}`.toLowerCase();
+    
+    if (recipients.includes('+preview@')) {
+      detectedEnvironment = 'preview';
+    } else if (recipients.includes('+local@') || recipients.includes('+dev@')) {
+      detectedEnvironment = 'local';
+    } else if (recipients.includes('+')) {
+      // Extract custom environment from plus addressing
+      const match = recipients.match(/\+([^@]+)@/);
+      if (match) detectedEnvironment = match[1];
+    }
     
     if (isCC) {
       // Check if already processed
@@ -100,13 +124,13 @@ export default async function handler(req, res) {
       // Generate confirmation token
       const confirmToken = crypto.randomBytes(32).toString('hex');
       
-      // Store decision (pending confirmation)
+      // Store decision (pending confirmation) with environment
       await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
           decision_date, topic, parameters, priority, decision_type,
           status, deadline, impact_scope, raw_thread, parsed_context,
-          confirmation_token
+          confirmation_token, environment, recipient_email
         ) VALUES (
           ${messageId}, ${threadId}, ${parsed.decision_summary}, 
           ${parsed.decision_maker || from}, ${uniqueEmails.filter(e => e !== from)},
@@ -114,7 +138,7 @@ export default async function handler(req, res) {
           ${JSON.stringify(parsed.parameters)}, ${parsed.priority}, 
           ${parsed.decision_type}, 'pending_confirmation', ${parsed.deadline}, 
           ${parsed.impact_scope}, ${text}, ${JSON.stringify(parsed)},
-          ${confirmToken}
+          ${confirmToken}, ${detectedEnvironment}, ${botEmail}
         )
       `;
       
