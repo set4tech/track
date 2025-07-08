@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { config } from 'dotenv';
-import { sql } from '@vercel/postgres';
+import { sql } from '../lib/database.js';
 import fetch from 'node-fetch';
 import crypto from 'crypto';
 

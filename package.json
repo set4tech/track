@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./tests/run-tests.sh",
+    "test:unit": "node tests/webhook-integration.test.js",
     "test:integration": "node tests/integration-test.js",
     "test:manual": "node tests/manual-test-scenarios.js",
     "test:setup": "chmod +x tests/run-tests.sh",
