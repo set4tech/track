@@ -62,8 +62,9 @@ export default async function handler(req, res) {
         console.error('Failed to send welcome message:', welcomeError);
       }
 
-      // Redirect to success page
-      res.redirect('/slack-success.html');
+      // Redirect to success page - use dynamic URL
+      const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://track-sigma-nine.vercel.app';
+      res.redirect(`${baseUrl}/slack-success.html`);
     } catch (error) {
       console.error('OAuth error:', error);
       res.status(500).json({ error: error.message });
