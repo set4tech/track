@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '../lib/database.js';
 
 export default async function handler(req, res) {
   // Allow both GET and POST for setup

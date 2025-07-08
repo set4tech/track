@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '../lib/database.js';
 import sgMail from '@sendgrid/mail';
 import OpenAI from 'openai';
 import crypto from 'crypto';
