@@ -26,8 +26,10 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "@slack/web-api": "^7.0.0",
     "@vercel/postgres": "^0.10.0",
+    "formidable": "^3.5.4",
     "openai": "^5.8.2",
     "sendgrid": "^5.2.3"
   },

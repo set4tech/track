@@ -1,0 +1,37 @@
+name: Vercel Preview Tests
+
+on:
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test-preview:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests before deployment
+      run: npm test
+      env:
+        POSTGRES_URL: postgresql://test:test@localhost:5432/test
+        SENDGRID_API_KEY: SG.test_key_for_ci
+        OPENAI_API_KEY: sk-test_key_for_ci
+        SENDER_EMAIL: test@example.com
+    
+    - name: Deploy to Vercel Preview
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.ORG_ID }}
+        vercel-project-id: ${{ secrets.PROJECT_ID }}
+        scope: ${{ secrets.VERCEL_ORG_ID }}
