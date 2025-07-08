@@ -1,4 +1,11 @@
 {
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/api/decisions-ui",
+        "permanent": false
+      }
+    ],
     "functions": {
       "api/*.js": {
         "maxDuration": 10
