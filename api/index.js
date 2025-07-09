@@ -86,13 +86,38 @@ export default async function handler(req, res) {
             justify-content: space-between;
           }
           .decision.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            width: 90%;
+            max-width: 800px;
             height: auto;
-            grid-column: 1 / -1;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           }
-          .decision:hover { 
+          .decision:hover:not(.expanded) { 
             transform: translateY(-2px); 
             box-shadow: 0 8px 24px rgba(0, 204, 136, 0.15); 
             border-color: var(--primary);
+          }
+          .overlay-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+          }
+          .overlay-backdrop.active {
+            opacity: 1;
+            visibility: visible;
           }
           .decision h3 { 
             font-family: 'Hedvig Letters Serif', serif; 
@@ -337,6 +362,9 @@ export default async function handler(req, res) {
           </div>
         `}
         
+        <!-- Overlay Backdrop -->
+        <div id="overlayBackdrop" class="overlay-backdrop"></div>
+        
         <!-- Thread Modal -->
         <div id="threadModal" class="thread-modal">
           <div class="thread-content">
@@ -352,39 +380,47 @@ export default async function handler(req, res) {
         </div>
         
         <script>
-          console.log('Decision click handler script loaded');
+          // Handle backdrop clicks
+          function toggleBackdrop(show) {
+            const backdrop = document.getElementById('overlayBackdrop');
+            if (show) {
+              backdrop.classList.add('active');
+            } else {
+              backdrop.classList.remove('active');
+            }
+          }
           
           // Use event delegation on the parent container
           document.addEventListener('click', function(event) {
-            console.log('Document click detected on:', event.target.tagName, event.target.className);
+            // Check if clicking the backdrop
+            if (event.target.id === 'overlayBackdrop') {
+              const expandedDecision = document.querySelector('.decision.expanded');
+              if (expandedDecision) {
+                expandedDecision.classList.remove('expanded');
+                toggleBackdrop(false);
+              }
+              return;
+            }
             
             // Check if the clicked element or its parent is a decision tile
             const decision = event.target.closest('.decision');
-            console.log('Closest .decision element:', decision);
             
-            if (!decision) {
-              console.log('Click was not on a decision tile');
-              return;
-            }
+            if (!decision) return;
             
             // Don't toggle if clicking on buttons, links, or elements inside .decision-details
             if (event.target.closest('button') || 
                 event.target.closest('a') || 
                 event.target.closest('.decision-details')) {
-              console.log('Click was on a button/link/details - ignoring');
               return;
             }
             
-            console.log('Processing decision tile click');
-            
             // Toggle the clicked decision
             const allDecisions = document.querySelectorAll('.decision');
-            console.log('Found', allDecisions.length, 'total decision tiles');
             
             // If clicking on an already expanded decision, just collapse it
             if (decision.classList.contains('expanded')) {
-              console.log('Collapsing already expanded decision');
               decision.classList.remove('expanded');
+              toggleBackdrop(false);
               return;
             }
             
@@ -394,15 +430,9 @@ export default async function handler(req, res) {
             });
             
             // Expand the clicked decision
-            console.log('Expanding decision with id:', decision.getAttribute('data-id'));
             decision.classList.add('expanded');
+            toggleBackdrop(true);
           });
-          
-          // Also log that we have decisions on the page
-          setTimeout(() => {
-            const decisions = document.querySelectorAll('.decision');
-            console.log('Page has', decisions.length, 'decision tiles');
-          }, 100);
           
           async function showThread(decisionId) {
             const modal = document.getElementById('threadModal');
