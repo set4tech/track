@@ -201,7 +201,7 @@ export default async function handler(req, res) {
           .decision.expanded .export-button {
             display: block;
             position: absolute;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             background: var(--muted-foreground);
             color: white;
