@@ -14,18 +14,37 @@ export default async function handler(req, res) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Install Decision Tracker for Slack</title>
         <style>
+            :root {
+                --primary: #00CC88;
+                --secondary: #003B1B;
+                --tertiary: #BBE835;
+                --accent: #ED6506;
+                --background: #ffffff;
+                --foreground: #003B1B;
+                --muted: #f0fdf4;
+                --muted-foreground: #16a34a;
+                --border: #d1fae5;
+            }
+            
             body { 
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                 max-width: 600px; margin: 50px auto; padding: 20px; 
-                background: #f8fafc; color: #1e293b; text-align: center;
+                background: var(--muted); color: var(--foreground); text-align: center;
             }
-            .header { background: white; padding: 40px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .header { 
+                background: var(--background); padding: 40px; border-radius: 12px; margin-bottom: 20px; 
+                box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1); border: 1px solid var(--border);
+            }
             .install-btn { 
-                background: #4A154B; color: white; padding: 15px 30px; 
+                background: var(--secondary); color: white; padding: 15px 30px; 
                 text-decoration: none; border-radius: 8px; display: inline-block;
-                font-weight: bold; margin: 20px 0;
+                font-weight: bold; margin: 20px 0; transition: all 0.3s;
             }
-            .install-btn:hover { background: #611f69; }
+            .install-btn:hover { 
+                background: var(--accent); 
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(237, 101, 6, 0.3);
+            }
             .features { text-align: left; margin: 20px 0; }
             .feature { margin: 10px 0; }
         </style>

@@ -32,78 +32,105 @@ export default async function handler(req, res) {
         <title>Decision Log</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
+          :root {
+            --primary: #00CC88;
+            --secondary: #003B1B;
+            --tertiary: #BBE835;
+            --accent: #ED6506;
+            --background: #ffffff;
+            --foreground: #003B1B;
+            --muted: #f0fdf4;
+            --muted-foreground: #16a34a;
+            --border: #d1fae5;
+            --card-bg: #ffffff;
+            --card-border: #d1fae5;
+          }
+          
           body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             max-width: 1200px; margin: 0 auto; padding: 20px; 
-            background: #f8fafc; color: #1e293b;
+            background: var(--muted); color: var(--foreground);
           }
-          h1 { color: #0f172a; margin-bottom: 10px; }
-          .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          h1 { color: var(--secondary); margin-bottom: 10px; }
+          .header { 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; 
+            box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border);
+          }
           .stats { display: flex; gap: 20px; margin-top: 15px; }
-          .stat { background: #f1f5f9; padding: 10px 15px; border-radius: 8px; }
+          .stat { 
+            background: var(--muted); padding: 10px 15px; border-radius: 8px; 
+            border: 1px solid var(--border);
+          }
           .decision { 
-            background: white; border: 1px solid #e2e8f0; padding: 24px; margin: 16px 0; 
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: var(--card-bg); border: 1px solid var(--card-border); padding: 24px; margin: 16px 0; 
+            border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1);
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
           }
-          .decision:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-          .decision h3 { margin-top: 0; color: #0f172a; font-size: 1.25rem; }
+          .decision:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 24px rgba(0, 204, 136, 0.15); 
+            border-color: var(--primary);
+          }
+          .decision h3 { margin-top: 0; color: var(--secondary); font-size: 1.25rem; }
           .meta { 
-            display: flex; gap: 15px; color: #64748b; font-size: 14px; margin: 15px 0;
+            display: flex; gap: 15px; color: var(--muted-foreground); font-size: 14px; margin: 15px 0;
             flex-wrap: wrap;
           }
           .meta span { 
             display: flex; align-items: center; gap: 5px; 
-            background: #f8fafc; padding: 4px 8px; border-radius: 6px;
+            background: var(--muted); padding: 4px 8px; border-radius: 6px;
+            border: 1px solid var(--border);
           }
-          .priority-critical { background: #fef2f2; color: #dc2626; font-weight: bold; }
-          .priority-high { background: #fff7ed; color: #ea580c; }
-          .priority-medium { background: #fefce8; color: #ca8a04; }
-          .priority-low { background: #f0fdf4; color: #16a34a; }
+          .priority-critical { background: #fef2f2; color: #dc2626; font-weight: bold; border-color: #fecaca; }
+          .priority-high { background: #fff7ed; color: var(--accent); border-color: #fed7aa; }
+          .priority-medium { background: #fefce8; color: #ca8a04; border-color: #fef3c7; }
+          .priority-low { background: var(--muted); color: var(--primary); border-color: var(--border); }
           .parameters { 
-            background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;
-            border-left: 4px solid #3b82f6;
+            background: var(--muted); padding: 15px; border-radius: 8px; margin: 15px 0;
+            border-left: 4px solid var(--primary); border: 1px solid var(--border);
           }
-          .witnesses { color: #64748b; font-size: 14px; margin-top: 15px; }
-          .empty { text-align: center; padding: 60px 20px; color: #64748b; }
+          .witnesses { color: var(--muted-foreground); font-size: 14px; margin-top: 15px; }
+          .empty { text-align: center; padding: 60px 20px; color: var(--muted-foreground); }
           .nav { text-align: center; margin-bottom: 20px; }
           .decision { cursor: pointer; }
           .thread-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;
+            background: rgba(0,59,27,0.5); z-index: 1000; overflow-y: auto;
           }
           .thread-content {
-            background: white; margin: 20px auto; max-width: 800px; border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative;
+            background: var(--card-bg); margin: 20px auto; max-width: 800px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 204, 136, 0.15); position: relative;
+            border: 1px solid var(--card-border);
           }
           .thread-header {
-            padding: 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+            padding: 20px; border-bottom: 1px solid var(--border); background: var(--muted);
             border-radius: 12px 12px 0 0;
           }
           .thread-body {
             padding: 20px; max-height: 60vh; overflow-y: auto;
           }
           .thread-email {
-            background: #f8fafc; padding: 15px; border-radius: 8px; margin: 10px 0;
-            border-left: 4px solid #3b82f6; font-family: monospace; white-space: pre-wrap;
-            line-height: 1.4;
+            background: var(--muted); padding: 15px; border-radius: 8px; margin: 10px 0;
+            border-left: 4px solid var(--primary); font-family: monospace; white-space: pre-wrap;
+            line-height: 1.4; border: 1px solid var(--border);
           }
           .close-btn {
             position: absolute; top: 15px; right: 20px; background: none; border: none;
-            font-size: 24px; cursor: pointer; color: #64748b;
+            font-size: 24px; cursor: pointer; color: var(--muted-foreground);
           }
-          .close-btn:hover { color: #1e293b; }
+          .close-btn:hover { color: var(--foreground); }
           .view-thread-btn {
-            background: #3b82f6; color: white; border: none; padding: 8px 16px;
+            background: var(--primary); color: white; border: none; padding: 8px 16px;
             border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 10px;
+            transition: background 0.2s;
           }
-          .view-thread-btn:hover { background: #2563eb; }
+          .view-thread-btn:hover { background: var(--secondary); }
           .export-button {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: #6b7280;
+            background: var(--muted-foreground);
             color: white;
             border: none;
             padding: 8px 12px;
@@ -112,16 +139,16 @@ export default async function handler(req, res) {
             font-size: 14px;
             transition: all 0.2s;
           }
-          .export-button:hover { background: #4b5563; }
+          .export-button:hover { background: var(--secondary); }
           .export-dropdown {
             position: absolute;
             top: 100%;
             right: 0;
             margin-top: 4px;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 204, 136, 0.15);
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s;
@@ -135,20 +162,20 @@ export default async function handler(req, res) {
           .export-option {
             display: block;
             padding: 10px 16px;
-            color: #1e293b;
+            color: var(--foreground);
             text-decoration: none;
             white-space: nowrap;
             transition: background 0.2s;
           }
           .export-option:hover {
-            background: #f8fafc;
+            background: var(--muted);
           }
           .nav a { 
-            background: #3b82f6; color: white; padding: 10px 20px; 
+            background: var(--primary); color: white; padding: 10px 20px; 
             text-decoration: none; border-radius: 8px; margin: 0 10px;
-            display: inline-block;
+            display: inline-block; transition: background 0.2s;
           }
-          .nav a:hover { background: #2563eb; }
+          .nav a:hover { background: var(--secondary); }
           @media (max-width: 768px) {
             .meta { flex-direction: column; gap: 8px; }
             .stats { flex-direction: column; gap: 10px; }
@@ -184,7 +211,7 @@ export default async function handler(req, res) {
           <div class="empty">
             <h2>No confirmed decisions yet</h2>
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
-            <p><a href="/api/slack-install-page">📱 Install Slack Bot</a></p>
+            <p><a href="/api/slack-install-page" style="color: var(--primary);">📱 Install Slack Bot</a></p>
           </div>
         ` : ''}
         
@@ -274,7 +301,7 @@ export default async function handler(req, res) {
               
               if (response.ok) {
                 title.textContent = decision.decision_summary;
-                meta.innerHTML = '<div style="color: #64748b; font-size: 14px; margin-top: 10px;">' +
+                meta.innerHTML = '<div style="color: var(--muted-foreground); font-size: 14px; margin-top: 10px;">' +
                   '<strong>From:</strong> ' + decision.decision_maker + '<br>' +
                   '<strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleString() + '<br>' +
                   '<strong>Topic:</strong> ' + decision.topic + ' | <strong>Type:</strong> ' + decision.decision_type + '<br>' +
@@ -288,7 +315,7 @@ export default async function handler(req, res) {
                   content.innerHTML = '';
                   content.appendChild(emailContainer);
                 } else {
-                  content.innerHTML = '<p style="color: #64748b; font-style: italic;">No email thread available for this decision.</p>';
+                  content.innerHTML = '<p style="color: var(--muted-foreground); font-style: italic;">No email thread available for this decision.</p>';
                 }
               } else {
                 content.innerHTML = '<p style="color: #dc2626;">Error loading thread: ' + decision.error + '</p>';
@@ -323,11 +350,11 @@ export default async function handler(req, res) {
                 const printWindow = window.open('', '_blank');
                 const printContent = '<!DOCTYPE html><html><head><title>' + decision.decision_summary + '</title>' +
                   '<style>body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
-                  'h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }' +
-                  '.meta { background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; }' +
-                  '.section { margin: 20px 0; } .section h3 { color: #1e293b; margin-bottom: 10px; }' +
-                  '.parameters { background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; }' +
-                  '.witnesses { color: #64748b; margin-top: 20px; } @media print { body { padding: 0; } }</style>' +
+                  'h1 { color: #003B1B; border-bottom: 2px solid #d1fae5; padding-bottom: 10px; }' +
+                  '.meta { background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; }' +
+                  '.section { margin: 20px 0; } .section h3 { color: #003B1B; margin-bottom: 10px; }' +
+                  '.parameters { background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #00CC88; }' +
+                  '.witnesses { color: #16a34a; margin-top: 20px; } @media print { body { padding: 0; } }</style>' +
                   '</head><body><h1>' + decision.decision_summary + '</h1>' +
                   '<div class="meta"><strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleDateString() + '<br>' +
                   '<strong>Topic:</strong> ' + decision.topic + '<br><strong>Type:</strong> ' + decision.decision_type + '<br>' +
@@ -345,7 +372,7 @@ export default async function handler(req, res) {
                   '<div class="witnesses"><strong>Decision Maker:</strong> ' + decision.decision_maker + '<br>' +
                   (decision.witnesses && decision.witnesses.length > 0 ? '<strong>Witnesses:</strong> ' + decision.witnesses.join(', ') + '<br>' : '') +
                   '<strong>Confirmed:</strong> ' + new Date(decision.confirmed_at).toLocaleString() + '</div>' +
-                  (decision.raw_thread ? '<div class="section"><h3>Email Thread</h3><pre style="white-space: pre-wrap; background: #f8fafc; padding: 15px; border-radius: 8px;">' + decision.raw_thread + '</pre></div>' : '') +
+                  (decision.raw_thread ? '<div class="section"><h3>Email Thread</h3><pre style="white-space: pre-wrap; background: #f0fdf4; padding: 15px; border-radius: 8px;">' + decision.raw_thread + '</pre></div>' : '') +
                   '</body></html>';
                 
                 printWindow.document.write(printContent);

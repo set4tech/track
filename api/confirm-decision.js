@@ -42,13 +42,24 @@ export default async function handler(req, res) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Decision Confirmed</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-          .success { background: #22c55e; color: white; padding: 20px; border-radius: 8px; text-align: center; }
-          .details { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .button { background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 5px; }
-        </style>
+        <title>Decision Confirmed</title>          <style>
+            :root {
+              --primary: #00CC88;
+              --secondary: #003B1B;
+              --tertiary: #BBE835;
+              --accent: #ED6506;
+              --background: #ffffff;
+              --foreground: #003B1B;
+              --muted: #f0fdf4;
+              --muted-foreground: #16a34a;
+              --border: #d1fae5;
+            }
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--muted); color: var(--foreground); }
+            .success { background: var(--primary); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+            .details { background: var(--background); padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid var(--border); }
+            .button { background: var(--secondary); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 5px; transition: background 0.2s; }
+            .button:hover { background: var(--accent); }
+          </style>
       </head>
       <body>
         <div class="success">
@@ -66,7 +77,7 @@ export default async function handler(req, res) {
         
         <p>This decision has been added to your decision log.</p>
         <div style="text-align: center;">
-          <a href="/" class="button">📋 View All Decisions</a>
+          <a href="/api/index" class="button">📋 View All Decisions</a>
         </div>
       </body>
       </html>
