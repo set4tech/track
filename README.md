@@ -154,7 +154,7 @@ npm run test:manual list
 
 ## How It Works
 
-1. **Email Processing**: When an email is CC'd to `decisions@bot.set4.io`, the webhook processes it
+1. **Email Processing**: When an email is CC'd to `decisions@track.set4.io`, the webhook processes it
 2. **Decision Extraction**: OpenAI GPT-4 analyzes the email content to extract decision information
 3. **Confirmation Flow**: A confirmation email is sent to the decision maker
 4. **Storage**: Confirmed decisions are stored in PostgreSQL with full context
@@ -162,7 +162,7 @@ npm run test:manual list
 
 ## Deployment
 
-The API is deployed at: https://track-set4.vercel.app/
+The API is deployed at: https://track.set4.io/
 
 ## Testing Without Email
 
