@@ -3,7 +3,13 @@ import OpenAI from 'openai';
 import crypto from 'crypto';
 import { verifySlackRequest } from './verify.js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://oai.helicone.ai/v1",
+  defaultHeaders: {
+    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+  },
+});
 
 // Helper to get raw body
 async function getRawBody(req) {
