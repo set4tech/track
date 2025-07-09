@@ -8,9 +8,9 @@ import { getConfig } from '../lib/config.js';
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: "https://oai.helicone.ai/v1",
-  defaultHeaders: {
+  defaultHeaders: process.env.HELICONE_API_KEY ? {
     "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
-  },
+  } : {},
 });
 
 // Initialize SendGrid with error handling
