@@ -213,6 +213,27 @@ export default async function handler(req, res) {
             transition: all 0.2s;
           }
           .export-button:hover { background: var(--secondary); }
+          .remove-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.2s;
+          }
+          .decision:hover .remove-button {
+            opacity: 1;
+          }
+          .remove-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+          }
           .export-dropdown {
             position: absolute;
             top: 100%;
@@ -307,6 +328,7 @@ export default async function handler(req, res) {
           
           return `
             <div class="decision" data-id="${decision.id}">
+              <button class="remove-button" onclick="event.stopPropagation(); removeDecision(${decision.id})" title="Remove decision">×</button>
               <h3>${decision.decision_summary}</h3>
               <div class="decision-maker">
                 <strong>${decision.decision_maker}</strong>
@@ -484,6 +506,38 @@ export default async function handler(req, res) {
               closeThread();
             }
           });
+          
+          async function removeDecision(decisionId) {
+            if (confirm('Are you sure you want to remove this decision? This action cannot be undone.')) {
+              try {
+                const response = await fetch('/api/delete-decision?id=' + decisionId, {
+                  method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                  const decisionElement = document.querySelector(`.decision[data-id="${decisionId}"]`);
+                  if (decisionElement) {
+                    decisionElement.style.opacity = '0';
+                    decisionElement.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                      decisionElement.remove();
+                      
+                      // If no decisions left, show empty state
+                      const remainingDecisions = document.querySelectorAll('.decision');
+                      if (remainingDecisions.length === 0) {
+                        location.reload();
+                      }
+                    }, 300);
+                  }
+                } else {
+                  alert('Error removing decision: ' + result.error);
+                }
+              } catch (error) {
+                alert('Error removing decision: ' + error.message);
+              }
+            }
+          }
           
           async function exportToPDF(decisionId) {
             try {
