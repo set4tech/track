@@ -77,10 +77,6 @@ export default async function handler(req, res) {
         </style>
       </head>
       <body>
-        <div class="nav">
-          <a href="/api/debug-decisions">🔧 Debug</a>
-        </div>
-        
         <div class="header">
           <h1>📋 Decision Log</h1>
           <div class="stats">
