@@ -5,6 +5,8 @@ A Vercel-deployed API service that tracks decisions made via email and provides 
 ## Preview Deployment Test
 Testing automatic preview deployments with isolated database branches.
 
+<!-- Trigger Vercel deployment on dev branch -->
+
 ## Environment Variables
 
 Add these environment variables in your Vercel project settings:
