@@ -1,6 +1,6 @@
 {
   "name": "track",
-  "version": "1.0.0",
+  "version": "1.0.0", // Deploy trigger
   "main": "index.js",
   "scripts": {
     "test": "./tests/run-tests.sh",
