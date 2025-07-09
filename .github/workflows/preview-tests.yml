@@ -77,7 +77,10 @@ jobs:
         echo "Branch database URL found"
     
     - name: Run migrations on branch database
-      run: npm run db:migrate
+      run: |
+        echo "Running database migrations..."
+        npm run db:migrate
+        echo "✅ Migrations completed (including auth tables)"
       env:
         POSTGRES_URL: ${{ env.DATABASE_URL }}
         DATABASE_URL: ${{ env.DATABASE_URL }}
