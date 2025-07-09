@@ -50,6 +50,7 @@ export default async function handler(req, res) {
             background: white; border: 1px solid #e2e8f0; padding: 24px; margin: 16px 0; 
             border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
           }
           .decision:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
           .decision h3 { margin-top: 0; color: #0f172a; font-size: 1.25rem; }
@@ -103,6 +104,50 @@ export default async function handler(req, res) {
             border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 10px;
           }
           .view-thread-btn:hover { background: #2563eb; }
+          .export-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+          }
+          .export-button:hover { background: #4b5563; }
+          .export-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 10;
+          }
+          .export-button:hover .export-dropdown,
+          .export-dropdown:hover {
+            opacity: 1;
+            visibility: visible;
+          }
+          .export-option {
+            display: block;
+            padding: 10px 16px;
+            color: #1e293b;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s;
+          }
+          .export-option:hover {
+            background: #f8fafc;
+          }
           .nav a { 
             background: #3b82f6; color: white; padding: 10px 20px; 
             text-decoration: none; border-radius: 8px; margin: 0 10px;
@@ -143,7 +188,8 @@ export default async function handler(req, res) {
         ${rows.length === 0 ? `
           <div class="empty">
             <h2>No confirmed decisions yet</h2>
-            <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> to get started!</p>
+            <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
+            <p><a href="/api/slack-install-page">📱 Install Slack Bot</a></p>
           </div>
         ` : ''}
         
@@ -160,6 +206,12 @@ export default async function handler(req, res) {
           
           return `
             <div class="decision" onclick="showThread(${decision.id})">
+              <button class="export-button" onclick="event.stopPropagation();">
+                Export
+                <div class="export-dropdown">
+                  <a href="#" class="export-option" onclick="event.preventDefault(); exportToPDF(${decision.id}); return false;">📄 Export to PDF</a>
+                </div>
+              </button>
               <h3>${decision.decision_summary}</h3>
               
               <div class="meta">
@@ -271,6 +323,86 @@ export default async function handler(req, res) {
               closeThread();
             }
           });
+          
+          async function exportToPDF(decisionId) {
+            try {
+              const response = await fetch(`/api/decision-thread?id=${decisionId}`);
+              const decision = await response.json();
+              
+              if (response.ok) {
+                // Create a printable version of the decision
+                const printWindow = window.open('', '_blank');
+                const printContent = `
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <title>${decision.decision_summary}</title>
+                    <style>
+                      body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+                      h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+                      .meta { background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                      .section { margin: 20px 0; }
+                      .section h3 { color: #1e293b; margin-bottom: 10px; }
+                      .parameters { background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; }
+                      .witnesses { color: #64748b; margin-top: 20px; }
+                      @media print { body { padding: 0; } }
+                    </style>
+                  </head>
+                  <body>
+                    <h1>${decision.decision_summary}</h1>
+                    <div class="meta">
+                      <strong>Date:</strong> ${new Date(decision.decision_date).toLocaleDateString()}<br>
+                      <strong>Topic:</strong> ${decision.topic}<br>
+                      <strong>Type:</strong> ${decision.decision_type}<br>
+                      <strong>Priority:</strong> ${decision.priority}<br>
+                      <strong>Impact Scope:</strong> ${decision.impact_scope}<br>
+                      ${decision.deadline ? `<strong>Deadline:</strong> ${new Date(decision.deadline).toLocaleDateString()}<br>` : ''}
+                    </div>
+                    ${decision.parsed_context?.key_points ? `
+                      <div class="section">
+                        <h3>Key Points</h3>
+                        <ul>
+                          ${decision.parsed_context.key_points.map(point => `<li>${point}</li>`).join('')}
+                        </ul>
+                      </div>
+                    ` : ''}
+                    ${decision.parameters && Object.keys(decision.parameters).length > 0 ? `
+                      <div class="section">
+                        <h3>Parameters</h3>
+                        <div class="parameters">
+                          ${Object.entries(decision.parameters).map(([k,v]) => `<strong>${k}:</strong> ${v}<br>`).join('')}
+                        </div>
+                      </div>
+                    ` : ''}
+                    <div class="witnesses">
+                      <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
+                      ${decision.witnesses?.length > 0 ? `<strong>Witnesses:</strong> ${decision.witnesses.join(', ')}<br>` : ''}
+                      <strong>Confirmed:</strong> ${new Date(decision.confirmed_at).toLocaleString()}
+                    </div>
+                    ${decision.raw_thread ? `
+                      <div class="section">
+                        <h3>Email Thread</h3>
+                        <pre style="white-space: pre-wrap; background: #f8fafc; padding: 15px; border-radius: 8px;">${decision.raw_thread}</pre>
+                      </div>
+                    ` : ''}
+                  </body>
+                  </html>
+                `;
+                
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                // Wait for content to load then trigger print
+                printWindow.onload = function() {
+                  printWindow.print();
+                };
+              } else {
+                alert('Error loading decision data');
+              }
+            } catch (error) {
+              alert('Error exporting to PDF: ' + error.message);
+            }
+          }
         </script>
       </body>
       </html>
