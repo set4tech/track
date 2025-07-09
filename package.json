@@ -3,8 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/run-tests.js",
-    "test:integration": "node tests/run-tests.js"
+    "test": "./tests/run-tests.sh",
+    "test:unit": "node tests/run-tests.js",
+    "test:integration": "node tests/integration-test.js",
+    "test:manual": "node tests/manual-test-scenarios.js",
+    "test:setup": "chmod +x tests/run-tests.sh",
+    "seed": "node scripts/seed-db.js",
+    "db:start": "node scripts/local-db.js start",
+    "db:stop": "node scripts/local-db.js stop",
+    "db:reset": "node scripts/local-db.js reset",
+    "db:status": "node scripts/local-db.js status",
+    "db:logs": "node scripts/local-db.js logs",
+    "db:sqlite": "node scripts/sqlite-setup.js setup",
+    "db:sqlite:remove": "node scripts/sqlite-setup.js remove",
+    "start:local": "npm run db:start && npm run seed && npm test",
+    "db:migrate": "node scripts/migrate.js",
+    "db:migrate:create": "node scripts/create-migration.js",
+    "sendgrid:setup": "node scripts/setup-sendgrid-inbound.js"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +33,9 @@
     "formidable": "^3.5.4",
     "openai": "^5.8.2",
     "sendgrid": "^5.2.3"
+  },
+  "devDependencies": {
+    "dotenv": "^17.1.0",
+    "node-fetch": "^3.3.2"
   }
 }

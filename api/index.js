@@ -1,15 +1,22 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '../lib/database.js';
+import { getConfig } from '../lib/config.js';
 
 export default async function handler(req, res) {
   try {
     const { team_id } = req.query;
+    const config = getConfig();
     
     let rows;
+    
+    // Filter by environment
+    const currentEnvironment = config.environment;
     
     if (team_id) {
       const result = await sql`
         SELECT * FROM decisions 
-        WHERE status = 'confirmed' AND slack_team_id = ${team_id}
+        WHERE status = 'confirmed' 
+          AND slack_team_id = ${team_id}
+          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -17,6 +24,7 @@ export default async function handler(req, res) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed'
+          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -113,7 +121,13 @@ export default async function handler(req, res) {
         </div>
         
         <div class="header">
-          <h1>📋 Decision Log</h1>
+          <h1>📋 Decision Log ${config.isProduction ? '' : `(${config.environment})`}</h1>
+          ${!config.isProduction ? `
+            <div style="background: #fff3cd; border: 1px solid #ffeebb; padding: 10px; margin: 10px 0; border-radius: 8px;">
+              <strong>⚠️ ${config.environment.toUpperCase()} Environment</strong> - 
+              Using email: <code>${config.inboundEmail}</code>
+            </div>
+          ` : ''}
           <div class="stats">
             <div class="stat">
               <strong>${rows.length}</strong> confirmed decisions
@@ -133,7 +147,7 @@ export default async function handler(req, res) {
         ${rows.length === 0 ? `
           <div class="empty">
             <h2>No confirmed decisions yet</h2>
-            <p>Send an email with a decision and CC <strong>decisions@bot.set4.io</strong> to get started!</p>
+            <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> to get started!</p>
           </div>
         ` : ''}
         

@@ -1,0 +1,95 @@
+name: Preview Deployment Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  wait-for-vercel-preview:
+    runs-on: ubuntu-latest
+    outputs:
+      preview-url: ${{ steps.get-preview-url.outputs.url }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Wait for Vercel Preview
+      uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
+      id: wait-for-preview
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        max_timeout: 300
+        check_interval: 10
+      continue-on-error: true
+    
+    - name: Get Preview URL
+      id: get-preview-url
+      run: |
+        if [ -z "${{ steps.wait-for-preview.outputs.url }}" ]; then
+          echo "No Vercel preview deployment found. Skipping preview tests."
+          echo "url=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        echo "url=${{ steps.wait-for-preview.outputs.url }}" >> $GITHUB_OUTPUT
+        echo "Preview URL: ${{ steps.wait-for-preview.outputs.url }}"
+
+  test-against-branch-db:
+    needs: wait-for-vercel-preview
+    runs-on: ubuntu-latest
+    if: needs.wait-for-vercel-preview.outputs.preview-url != ''
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Get Branch Database URL
+      id: get-db-url
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+        VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+      run: |
+        # Get the deployment ID from the preview URL
+        PREVIEW_URL="${{ needs.wait-for-vercel-preview.outputs.preview-url }}"
+        DEPLOYMENT_ID=$(echo $PREVIEW_URL | grep -oP '(?<=track-)[^.]+')
+        
+        # Get deployment details from Vercel API
+        DEPLOYMENT_INFO=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+          "https://api.vercel.com/v13/deployments/$DEPLOYMENT_ID?withGitRepoInfo=true")
+        
+        # Extract the branch database URL from environment variables
+        DB_URL=$(echo $DEPLOYMENT_INFO | jq -r '.env.POSTGRES_URL // .env.DATABASE_URL // empty')
+        
+        if [ -z "$DB_URL" ]; then
+          echo "No branch database URL found in deployment"
+          exit 1
+        fi
+        
+        echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+        echo "Branch database URL found"
+    
+    - name: Run migrations on branch database
+      run: npm run db:migrate
+      env:
+        POSTGRES_URL: ${{ env.DATABASE_URL }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
+    
+    - name: Run integration tests against branch database
+      run: npm test
+      env:
+        POSTGRES_URL: ${{ env.DATABASE_URL }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
+        TEST_BASE_URL: ${{ needs.wait-for-vercel-preview.outputs.preview-url }}
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        NODE_ENV: preview
+        VERCEL_ENV: preview

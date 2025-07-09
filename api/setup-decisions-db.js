@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { sql } from '../lib/database.js';
 
 export default async function handler(req, res) {
   // Allow both GET and POST for setup
@@ -7,8 +7,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Drop the old table if it exists to avoid schema conflicts
-    await sql`DROP TABLE IF EXISTS decisions`;
+    // This endpoint is deprecated - use migrations instead
+    // Run: npm run db:migrate
+    return res.status(200).json({ 
+      message: 'Database setup is now handled by migrations.',
+      instructions: 'Run npm run db:migrate to set up the database'
+    });
     
     await sql`
       CREATE TABLE decisions (
