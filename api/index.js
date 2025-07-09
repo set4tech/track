@@ -352,24 +352,38 @@ export default async function handler(req, res) {
         </div>
         
         <script>
+          console.log('Decision click handler script loaded');
+          
           // Use event delegation on the parent container
           document.addEventListener('click', function(event) {
+            console.log('Document click detected on:', event.target.tagName, event.target.className);
+            
             // Check if the clicked element or its parent is a decision tile
             const decision = event.target.closest('.decision');
-            if (!decision) return;
+            console.log('Closest .decision element:', decision);
+            
+            if (!decision) {
+              console.log('Click was not on a decision tile');
+              return;
+            }
             
             // Don't toggle if clicking on buttons, links, or elements inside .decision-details
             if (event.target.closest('button') || 
                 event.target.closest('a') || 
                 event.target.closest('.decision-details')) {
+              console.log('Click was on a button/link/details - ignoring');
               return;
             }
             
+            console.log('Processing decision tile click');
+            
             // Toggle the clicked decision
             const allDecisions = document.querySelectorAll('.decision');
+            console.log('Found', allDecisions.length, 'total decision tiles');
             
             // If clicking on an already expanded decision, just collapse it
             if (decision.classList.contains('expanded')) {
+              console.log('Collapsing already expanded decision');
               decision.classList.remove('expanded');
               return;
             }
@@ -380,8 +394,15 @@ export default async function handler(req, res) {
             });
             
             // Expand the clicked decision
+            console.log('Expanding decision with id:', decision.getAttribute('data-id'));
             decision.classList.add('expanded');
           });
+          
+          // Also log that we have decisions on the page
+          setTimeout(() => {
+            const decisions = document.querySelectorAll('.decision');
+            console.log('Page has', decisions.length, 'decision tiles');
+          }, 100);
           
           async function showThread(decisionId) {
             const modal = document.getElementById('threadModal');
