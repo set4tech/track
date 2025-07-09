@@ -50,46 +50,29 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Get Branch Database URL
-      id: get-db-url
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-        VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
+    - name: Setup Test Environment
+      id: setup-test-env
       run: |
-        # Get the deployment ID from the preview URL
-        PREVIEW_URL="${{ needs.wait-for-vercel-preview.outputs.preview-url }}"
-        DEPLOYMENT_ID=$(echo $PREVIEW_URL | grep -oP '(?<=track-)[^.]+')
+        echo "Setting up test environment for preview deployment"
+        echo "Preview URL: ${{ needs.wait-for-vercel-preview.outputs.preview-url }}"
         
-        # Get deployment details from Vercel API
-        DEPLOYMENT_INFO=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-          "https://api.vercel.com/v13/deployments/$DEPLOYMENT_ID?withGitRepoInfo=true")
+        # Since Vercel handles the Neon integration natively, we can't access the branch database URL
+        # from outside the deployment. Instead, we'll run tests against the preview deployment itself
+        # which has the correct database already connected.
         
-        # Extract the branch database URL from environment variables
-        DB_URL=$(echo $DEPLOYMENT_INFO | jq -r '.env.POSTGRES_URL // .env.DATABASE_URL // empty')
-        
-        if [ -z "$DB_URL" ]; then
-          echo "No branch database URL found in deployment"
-          exit 1
-        fi
-        
-        echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
-        echo "Branch database URL found"
+        echo "Note: Tests will run against the preview deployment's API endpoints"
+        echo "The preview deployment has its own isolated Neon branch database"
     
-    - name: Run migrations on branch database
-      run: npm run db:migrate
-      env:
-        POSTGRES_URL: ${{ env.DATABASE_URL }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
-    
-    - name: Run integration tests against branch database
+    - name: Run integration tests against preview deployment
       run: npm test
       env:
-        POSTGRES_URL: ${{ env.DATABASE_URL }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
+        # Tests will run against the preview deployment's API
+        # The preview deployment already has its own Neon branch database
         TEST_BASE_URL: ${{ needs.wait-for-vercel-preview.outputs.preview-url }}
         SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
-        NODE_ENV: preview
+        NODE_ENV: test
         VERCEL_ENV: preview
+        # Use a test database for local operations if needed
+        POSTGRES_URL: ${{ secrets.TEST_DATABASE_URL }}
