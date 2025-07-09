@@ -1,14 +1,27 @@
 import { sql } from '../lib/database.js';
 import { getConfig } from '../lib/config.js';
+import { requireAuth } from '../lib/auth.js';
+import { generateAuthHTML, generateUserMenuHTML } from '../lib/auth-ui.js';
+import { generateCSRFToken } from '../lib/auth.js';
+import cookie from 'cookie';
 
 export default async function handler(req, res) {
   try {
     const { team_id } = req.query;
     const config = getConfig();
     
+    // Check authentication
+    const auth = await requireAuth(req, res);
+    
+    // Generate CSRF token for auth forms
+    const csrfToken = generateCSRFToken();
+    
     let rows;
     
-    if (team_id) {
+    // Only show decisions if authenticated
+    if (!auth.authenticated) {
+      rows = [];
+    } else if (team_id) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed' 
@@ -16,13 +29,17 @@ export default async function handler(req, res) {
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
-    } else {
+    } else if (auth.authenticated) {
+      // Show user's decisions or all decisions based on email
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed'
+          AND (user_id = ${auth.user.id} OR created_by_email = ${auth.user.email} OR decision_maker = ${auth.user.email})
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
+    } else {
+      rows = [];
     }
     
     const html = `
@@ -156,6 +173,8 @@ export default async function handler(req, res) {
         </style>
       </head>
       <body>
+        ${auth.authenticated ? generateUserMenuHTML(auth.user) : generateAuthHTML(csrfToken)}
+        
         <div class="header">
           <h1>📋 Decision Log ${config.isProduction ? '' : `(${config.environment})`}</h1>
           ${!config.isProduction ? `
@@ -180,7 +199,12 @@ export default async function handler(req, res) {
           </div>
         </div>
         
-        ${rows.length === 0 ? `
+        ${!auth.authenticated ? `
+          <div class="empty">
+            <h2>Please sign in to view decisions</h2>
+            <p>Sign in with your Google or Microsoft account to access your decision log.</p>
+          </div>
+        ` : rows.length === 0 ? `
           <div class="empty">
             <h2>No confirmed decisions yet</h2>
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
@@ -188,7 +212,7 @@ export default async function handler(req, res) {
           </div>
         ` : ''}
         
-        ${rows.map(decision => {
+        ${auth.authenticated ? rows.map(decision => {
           let params = {};
           let parsedContext = {};
           try {
@@ -242,7 +266,7 @@ export default async function handler(req, res) {
               </div>
             </div>
           `;
-        }).join('')}
+        }).join('') : ''}
         
         <!-- Thread Modal -->
         <div id="threadModal" class="thread-modal">
