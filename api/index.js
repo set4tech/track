@@ -467,9 +467,9 @@ export default async function handler(req, res) {
               if (response.ok) {
                 const printWindow = window.open('', '_blank');
                 const printContent = '<!DOCTYPE html><html><head><title>' + decision.decision_summary + '</title>' +
-                  '<style>@import url(\'https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap\');' +
-                  'body { font-family: \'Instrument Sans\', -apple-system, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
-                  'h1 { font-family: \'Hedvig Letters Serif\', serif; color: #003B1B; border-bottom: 2px solid #d1fae5; padding-bottom: 10px; }' +
+                  '<style>@import url("https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap");' +
+                  'body { font-family: "Instrument Sans", -apple-system, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
+                  'h1 { font-family: "Hedvig Letters Serif", serif; color: #003B1B; border-bottom: 2px solid #d1fae5; padding-bottom: 10px; }' +
                   '.meta { background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; }' +
                   '.section { margin: 20px 0; } .section h3 { color: #003B1B; margin-bottom: 10px; }' +
                   '.parameters { background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #00CC88; }' +
