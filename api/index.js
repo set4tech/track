@@ -76,7 +76,6 @@ export default async function handler(req, res) {
             padding: 24px; 
             border-radius: 12px; 
             box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1);
-            transition: all 0.3s ease;
             position: relative;
             cursor: pointer;
             overflow: hidden;
@@ -89,7 +88,7 @@ export default async function handler(req, res) {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%);
             width: 90%;
             max-width: 800px;
             height: auto;
@@ -111,13 +110,10 @@ export default async function handler(req, res) {
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            display: none;
           }
           .overlay-backdrop.active {
-            opacity: 1;
-            visibility: visible;
+            display: block;
           }
           .decision h3 { 
             font-family: 'Hedvig Letters Serif', serif; 
