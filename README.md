@@ -146,15 +146,14 @@ npm run test:manual list
 
 - `GET /` - View confirmed decisions (homepage)
 - `POST /api/webhook-inbound` - Webhook for processing incoming emails
-- `POST /api/test-webhook` - Simplified webhook for testing (no OpenAI)
-- `POST /api/simple-test` - Direct database insertion for testing
+
 - `GET /api/confirm-decision?token=<token>` - Confirm a decision
 - `GET /api/decisions-ui` - View confirmed decisions
 - `GET /api/setup-decisions-db` - Initialize database table
 
 ## How It Works
 
-1. **Email Processing**: When an email is CC'd to `decisions@bot.set4.io`, the webhook processes it
+1. **Email Processing**: When an email is CC'd to `decisions@track.set4.io`, the webhook processes it
 2. **Decision Extraction**: OpenAI GPT-4 analyzes the email content to extract decision information
 3. **Confirmation Flow**: A confirmation email is sent to the decision maker
 4. **Storage**: Confirmed decisions are stored in PostgreSQL with full context
@@ -162,7 +161,7 @@ npm run test:manual list
 
 ## Deployment
 
-The API is deployed at: https://track-set4.vercel.app/
+The API is deployed at: https://track.set4.io/
 
 ## Testing Without Email
 

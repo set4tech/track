@@ -8,15 +8,11 @@ export default async function handler(req, res) {
     
     let rows;
     
-    // Filter by environment
-    const currentEnvironment = config.environment;
-    
     if (team_id) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed' 
           AND slack_team_id = ${team_id}
-          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -24,7 +20,6 @@ export default async function handler(req, res) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed'
-          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -274,35 +269,32 @@ export default async function handler(req, res) {
             content.innerHTML = 'Loading thread...';
             
             try {
-              const response = await fetch(`/api/decision-thread?id=${decisionId}`);
+              const response = await fetch('/api/decision-thread?id=' + decisionId);
               const decision = await response.json();
               
               if (response.ok) {
                 title.textContent = decision.decision_summary;
-                meta.innerHTML = `
-                  <div style="color: #64748b; font-size: 14px; margin-top: 10px;">
-                    <strong>From:</strong> ${decision.decision_maker}<br>
-                    <strong>Date:</strong> ${new Date(decision.decision_date).toLocaleString()}<br>
-                    <strong>Topic:</strong> ${decision.topic} | <strong>Type:</strong> ${decision.decision_type}<br>
-                    <strong>Priority:</strong> ${decision.priority} | <strong>Impact:</strong> ${decision.impact_scope}
-                  </div>
-                `;
+                meta.innerHTML = '<div style="color: #64748b; font-size: 14px; margin-top: 10px;">' +
+                  '<strong>From:</strong> ' + decision.decision_maker + '<br>' +
+                  '<strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleString() + '<br>' +
+                  '<strong>Topic:</strong> ' + decision.topic + ' | <strong>Type:</strong> ' + decision.decision_type + '<br>' +
+                  '<strong>Priority:</strong> ' + decision.priority + ' | <strong>Impact:</strong> ' + decision.impact_scope +
+                  '</div>';
                 
                 if (decision.raw_thread) {
-                  // Use textContent to prevent XSS
                   const emailContainer = document.createElement('div');
                   emailContainer.className = 'thread-email';
                   emailContainer.textContent = decision.raw_thread;
-                  content.innerHTML = ''; // Clear previous content
+                  content.innerHTML = '';
                   content.appendChild(emailContainer);
                 } else {
                   content.innerHTML = '<p style="color: #64748b; font-style: italic;">No email thread available for this decision.</p>';
                 }
               } else {
-                content.innerHTML = `<p style="color: #dc2626;">Error loading thread: ${decision.error}</p>`;
+                content.innerHTML = '<p style="color: #dc2626;">Error loading thread: ' + decision.error + '</p>';
               }
             } catch (error) {
-              content.innerHTML = `<p style="color: #dc2626;">Error loading thread: ${error.message}</p>`;
+              content.innerHTML = '<p style="color: #dc2626;">Error loading thread: ' + error.message + '</p>';
             }
           }
           
@@ -310,14 +302,12 @@ export default async function handler(req, res) {
             document.getElementById('threadModal').style.display = 'none';
           }
           
-          // Close modal when clicking outside
           document.getElementById('threadModal').addEventListener('click', function(e) {
             if (e.target === this) {
               closeThread();
             }
           });
           
-          // Close modal with Escape key
           document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
               closeThread();
@@ -326,73 +316,40 @@ export default async function handler(req, res) {
           
           async function exportToPDF(decisionId) {
             try {
-              const response = await fetch(`/api/decision-thread?id=${decisionId}`);
+              const response = await fetch('/api/decision-thread?id=' + decisionId);
               const decision = await response.json();
               
               if (response.ok) {
-                // Create a printable version of the decision
                 const printWindow = window.open('', '_blank');
-                const printContent = `
-                  <!DOCTYPE html>
-                  <html>
-                  <head>
-                    <title>${decision.decision_summary}</title>
-                    <style>
-                      body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-                      h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-                      .meta { background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; }
-                      .section { margin: 20px 0; }
-                      .section h3 { color: #1e293b; margin-bottom: 10px; }
-                      .parameters { background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; }
-                      .witnesses { color: #64748b; margin-top: 20px; }
-                      @media print { body { padding: 0; } }
-                    </style>
-                  </head>
-                  <body>
-                    <h1>${decision.decision_summary}</h1>
-                    <div class="meta">
-                      <strong>Date:</strong> ${new Date(decision.decision_date).toLocaleDateString()}<br>
-                      <strong>Topic:</strong> ${decision.topic}<br>
-                      <strong>Type:</strong> ${decision.decision_type}<br>
-                      <strong>Priority:</strong> ${decision.priority}<br>
-                      <strong>Impact Scope:</strong> ${decision.impact_scope}<br>
-                      ${decision.deadline ? `<strong>Deadline:</strong> ${new Date(decision.deadline).toLocaleDateString()}<br>` : ''}
-                    </div>
-                    ${decision.parsed_context?.key_points ? `
-                      <div class="section">
-                        <h3>Key Points</h3>
-                        <ul>
-                          ${decision.parsed_context.key_points.map(point => `<li>${point}</li>`).join('')}
-                        </ul>
-                      </div>
-                    ` : ''}
-                    ${decision.parameters && Object.keys(decision.parameters).length > 0 ? `
-                      <div class="section">
-                        <h3>Parameters</h3>
-                        <div class="parameters">
-                          ${Object.entries(decision.parameters).map(([k,v]) => `<strong>${k}:</strong> ${v}<br>`).join('')}
-                        </div>
-                      </div>
-                    ` : ''}
-                    <div class="witnesses">
-                      <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
-                      ${decision.witnesses?.length > 0 ? `<strong>Witnesses:</strong> ${decision.witnesses.join(', ')}<br>` : ''}
-                      <strong>Confirmed:</strong> ${new Date(decision.confirmed_at).toLocaleString()}
-                    </div>
-                    ${decision.raw_thread ? `
-                      <div class="section">
-                        <h3>Email Thread</h3>
-                        <pre style="white-space: pre-wrap; background: #f8fafc; padding: 15px; border-radius: 8px;">${decision.raw_thread}</pre>
-                      </div>
-                    ` : ''}
-                  </body>
-                  </html>
-                `;
+                const printContent = '<!DOCTYPE html><html><head><title>' + decision.decision_summary + '</title>' +
+                  '<style>body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
+                  'h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }' +
+                  '.meta { background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; }' +
+                  '.section { margin: 20px 0; } .section h3 { color: #1e293b; margin-bottom: 10px; }' +
+                  '.parameters { background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; }' +
+                  '.witnesses { color: #64748b; margin-top: 20px; } @media print { body { padding: 0; } }</style>' +
+                  '</head><body><h1>' + decision.decision_summary + '</h1>' +
+                  '<div class="meta"><strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleDateString() + '<br>' +
+                  '<strong>Topic:</strong> ' + decision.topic + '<br><strong>Type:</strong> ' + decision.decision_type + '<br>' +
+                  '<strong>Priority:</strong> ' + decision.priority + '<br><strong>Impact Scope:</strong> ' + decision.impact_scope + '<br>' +
+                  (decision.deadline ? '<strong>Deadline:</strong> ' + new Date(decision.deadline).toLocaleDateString() + '<br>' : '') +
+                  '</div>' +
+                  (decision.parsed_context && decision.parsed_context.key_points ? 
+                    '<div class="section"><h3>Key Points</h3><ul>' + 
+                    decision.parsed_context.key_points.map(function(point) { return '<li>' + point + '</li>'; }).join('') + 
+                    '</ul></div>' : '') +
+                  (decision.parameters && Object.keys(decision.parameters).length > 0 ? 
+                    '<div class="section"><h3>Parameters</h3><div class="parameters">' +
+                    Object.entries(decision.parameters).map(function(entry) { return '<strong>' + entry[0] + ':</strong> ' + entry[1] + '<br>'; }).join('') +
+                    '</div></div>' : '') +
+                  '<div class="witnesses"><strong>Decision Maker:</strong> ' + decision.decision_maker + '<br>' +
+                  (decision.witnesses && decision.witnesses.length > 0 ? '<strong>Witnesses:</strong> ' + decision.witnesses.join(', ') + '<br>' : '') +
+                  '<strong>Confirmed:</strong> ' + new Date(decision.confirmed_at).toLocaleString() + '</div>' +
+                  (decision.raw_thread ? '<div class="section"><h3>Email Thread</h3><pre style="white-space: pre-wrap; background: #f8fafc; padding: 15px; border-radius: 8px;">' + decision.raw_thread + '</pre></div>' : '') +
+                  '</body></html>';
                 
                 printWindow.document.write(printContent);
                 printWindow.document.close();
-                
-                // Wait for content to load then trigger print
                 printWindow.onload = function() {
                   printWindow.print();
                 };

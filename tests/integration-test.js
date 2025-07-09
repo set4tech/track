@@ -125,7 +125,7 @@ class IntegrationTester {
   }
 
   async sendSimpleTestEmail(scenario) {
-    const response = await fetch(`${BASE_URL}/api/test-webhook`, {
+    const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scenario)
@@ -171,7 +171,7 @@ class IntegrationTester {
           text: 'I have decided to use React for the frontend framework.'
         };
         
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -205,7 +205,7 @@ class IntegrationTester {
           text: 'I approve the $50,000 marketing budget for Q1.'
         };
         
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -239,7 +239,7 @@ class IntegrationTester {
           text: 'Final decision: We will migrate to PostgreSQL over the next 3 months.'
         };
         
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -268,7 +268,7 @@ class IntegrationTester {
           text: 'Thanks everyone for attending the meeting. We discussed various options but no final decisions were made.'
         };
         
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -293,7 +293,7 @@ class IntegrationTester {
           text: 'This is a decision for query testing.'
         };
         
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -370,7 +370,7 @@ class IntegrationTester {
           text: 'This is a direct database test decision'
         };
 
-        const response = await fetch(`${BASE_URL}/api/simple-test`, {
+        const response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(testData)
@@ -396,8 +396,7 @@ class IntegrationTester {
       await this.test('API Endpoint Availability', async () => {
         const endpoints = [
           '/api/webhook-inbound',
-          '/api/test-webhook', 
-          '/api/simple-test',
+          '/api/webhook-inbound',
           '/api/confirm-decision',
           '/api/decisions-ui'
         ];
@@ -415,7 +414,7 @@ class IntegrationTester {
           }
           
           // For endpoints that might fail due to email configuration, just check they're reachable
-          if (endpoint === '/api/test-webhook' && response.status === 500) {
+          if (endpoint === '/api/webhook-inbound' && response.status === 500) {
             // This is expected if SendGrid is not configured properly
             continue;
           }
