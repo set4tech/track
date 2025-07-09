@@ -33,8 +33,8 @@ jobs:
     - name: Run migrations on production database
       run: npm run db:migrate
       env:
-        POSTGRES_URL: ${{ secrets.POSTGRES_URL_PRODUCTION }}
-        DATABASE_URL: ${{ secrets.POSTGRES_URL_PRODUCTION }}
+        POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        DATABASE_URL: ${{ secrets.POSTGRES_URL }}
     
     - name: Verify migration success
       run: |
