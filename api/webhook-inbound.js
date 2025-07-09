@@ -103,8 +103,8 @@ export default async function handler(req, res) {
       if (match) detectedEnvironment = match[1];
     }
     
-    if (isBotIncluded && !isTO) {
-      // Process as decision (bot in CC)
+    if (isBotIncluded) {
+      // Process as decision (bot in CC or TO)
       // Check if already processed
       const existing = await sql`
         SELECT id FROM decisions WHERE message_id = ${messageId}
@@ -212,27 +212,6 @@ View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
       
       res.status(200).json({ status: 'success', decision: parsed });
       
-    } else if (isTO) {
-      // Query for confirmed decisions (bot in TO)
-      const { rows } = await sql`
-        SELECT * FROM decisions 
-        WHERE status = 'confirmed'
-        ORDER BY created_at DESC 
-        LIMIT 10
-      `;
-      
-      const decisionsList = rows.length > 0 
-        ? rows.map((d, i) => `${i + 1}. ${d.decision_summary} (${new Date(d.created_at).toLocaleDateString()})`).join('\n')
-        : 'No decisions found.';
-      
-      await sgMail.send({
-        to: from,
-        from: process.env.SENDER_EMAIL,
-        subject: `Re: ${subject}`,
-        text: `Recent decisions:\n\n${decisionsList}\n\nView all: https://track-sigma-nine.vercel.app/api/decisions-ui`
-      });
-      
-      res.status(200).json({ status: 'query_sent' });
     } else {
       res.status(200).json({ status: 'ignored' });
     }
