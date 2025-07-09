@@ -352,34 +352,35 @@ export default async function handler(req, res) {
         </div>
         
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            // Add click handlers to all decision tiles
-            const decisions = document.querySelectorAll('.decision');
-            decisions.forEach(decision => {
-              decision.addEventListener('click', function(event) {
-                // Don't toggle if clicking on buttons or links inside
-                if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') {
-                  return;
-                }
-                
-                const clickedDecision = this;
-                const allDecisions = document.querySelectorAll('.decision');
-                
-                // If clicking on an already expanded decision, just collapse it
-                if (clickedDecision.classList.contains('expanded')) {
-                  clickedDecision.classList.remove('expanded');
-                  return;
-                }
-                
-                // Collapse all other decisions
-                allDecisions.forEach(d => {
-                  d.classList.remove('expanded');
-                });
-                
-                // Expand the clicked decision
-                clickedDecision.classList.add('expanded');
-              });
+          // Use event delegation on the parent container
+          document.addEventListener('click', function(event) {
+            // Check if the clicked element or its parent is a decision tile
+            const decision = event.target.closest('.decision');
+            if (!decision) return;
+            
+            // Don't toggle if clicking on buttons, links, or elements inside .decision-details
+            if (event.target.closest('button') || 
+                event.target.closest('a') || 
+                event.target.closest('.decision-details')) {
+              return;
+            }
+            
+            // Toggle the clicked decision
+            const allDecisions = document.querySelectorAll('.decision');
+            
+            // If clicking on an already expanded decision, just collapse it
+            if (decision.classList.contains('expanded')) {
+              decision.classList.remove('expanded');
+              return;
+            }
+            
+            // Collapse all other decisions
+            allDecisions.forEach(d => {
+              d.classList.remove('expanded');
             });
+            
+            // Expand the clicked decision
+            decision.classList.add('expanded');
           });
           
           async function showThread(decisionId) {
