@@ -64,18 +64,64 @@ export default async function handler(req, res) {
             background: var(--muted); padding: 10px 15px; border-radius: 8px; 
             border: 1px solid var(--border);
           }
+          .decisions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+          }
           .decision { 
-            background: var(--card-bg); border: 1px solid var(--card-border); padding: 24px; margin: 16px 0; 
-            border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--card-bg); 
+            border: 1px solid var(--card-border); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1);
+            transition: all 0.3s ease;
             position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .decision.expanded {
+            height: auto;
+            grid-column: 1 / -1;
           }
           .decision:hover { 
             transform: translateY(-2px); 
             box-shadow: 0 8px 24px rgba(0, 204, 136, 0.15); 
             border-color: var(--primary);
           }
-          .decision h3 { font-family: 'Hedvig Letters Serif', serif; margin-top: 0; color: var(--secondary); font-size: 1.25rem; }
+          .decision h3 { 
+            font-family: 'Hedvig Letters Serif', serif; 
+            margin: 0; 
+            color: var(--secondary); 
+            font-size: 1.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+          }
+          .decision-maker {
+            color: var(--muted-foreground);
+            font-size: 14px;
+            margin-top: auto;
+          }
+          .decision-details {
+            display: none;
+            margin-top: 20px;
+          }
+          .decision.expanded .decision-details {
+            display: block;
+          }
+          .decision.expanded h3 {
+            overflow: visible;
+            text-overflow: clip;
+            -webkit-line-clamp: unset;
+          }
           .meta { 
             display: flex; gap: 15px; color: var(--muted-foreground); font-size: 14px; margin: 15px 0;
             flex-wrap: wrap;
@@ -96,7 +142,6 @@ export default async function handler(req, res) {
           .witnesses { color: var(--muted-foreground); font-size: 14px; margin-top: 15px; }
           .empty { text-align: center; padding: 60px 20px; color: var(--muted-foreground); }
           .nav { text-align: center; margin-bottom: 20px; }
-          .decision { cursor: pointer; }
           .thread-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,59,27,0.5); z-index: 1000; overflow-y: auto;
@@ -129,7 +174,11 @@ export default async function handler(req, res) {
             transition: background 0.2s;
           }
           .view-thread-btn:hover { background: var(--secondary); }
-          .export-button {
+          .decision .export-button {
+            display: none;
+          }
+          .decision.expanded .export-button {
+            display: block;
             position: absolute;
             top: 20px;
             right: 20px;
@@ -182,6 +231,12 @@ export default async function handler(req, res) {
           @media (max-width: 768px) {
             .meta { flex-direction: column; gap: 8px; }
             .stats { flex-direction: column; gap: 10px; }
+            .decisions-grid {
+              grid-template-columns: 1fr;
+            }
+            .decision {
+              height: 100px;
+            }
           }
         </style>
       </head>
@@ -216,9 +271,9 @@ export default async function handler(req, res) {
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
             <p><a href="/api/slack-install-page" style="color: var(--primary);">📱 Install Slack Bot</a></p>
           </div>
-        ` : ''}
-        
-        ${rows.map(decision => {
+        ` : `
+          <div class="decisions-grid">
+            ${rows.map(decision => {
           let params = {};
           let parsedContext = {};
           try {
@@ -230,49 +285,57 @@ export default async function handler(req, res) {
           const witnesses = decision.witnesses || [];
           
           return `
-            <div class="decision" onclick="showThread(${decision.id})">
-              <button class="export-button" onclick="event.stopPropagation();">
-                Export
-                <div class="export-dropdown">
-                  <a href="#" class="export-option" onclick="event.preventDefault(); exportToPDF(${decision.id}); return false;">📄 Export to PDF</a>
-                </div>
-              </button>
+            <div class="decision" onclick="toggleDecision(event, ${decision.id})">
               <h3>${decision.decision_summary}</h3>
-              
-              <div class="meta">
-                <span>📅 ${new Date(decision.decision_date).toLocaleDateString()}</span>
-                <span>🏷️ ${decision.topic}</span>
-                <span>📊 ${decision.decision_type}</span>
-                <span class="priority-${decision.priority}">⚡ ${decision.priority}</span>
-                <span>🎯 ${decision.impact_scope}</span>
-                ${decision.deadline ? `<span>⏰ ${new Date(decision.deadline).toLocaleDateString()}</span>` : ''}
+              <div class="decision-maker">
+                <strong>${decision.decision_maker}</strong>
               </div>
               
-              ${parsedContext.key_points && parsedContext.key_points.length > 0 ? `
-                <div class="parameters">
-                  <strong>Key Points:</strong>
-                  <ul style="margin: 10px 0 0 0;">
-                    ${parsedContext.key_points.map(point => `<li>${point}</li>`).join('')}
-                  </ul>
+              <div class="decision-details">
+                <button class="export-button" onclick="event.stopPropagation();">
+                  Export
+                  <div class="export-dropdown">
+                    <a href="#" class="export-option" onclick="event.preventDefault(); exportToPDF(${decision.id}); return false;">📄 Export to PDF</a>
+                  </div>
+                </button>
+                
+                <div class="meta">
+                  <span>📅 ${new Date(decision.decision_date).toLocaleDateString()}</span>
+                  <span>🏷️ ${decision.topic}</span>
+                  <span>📊 ${decision.decision_type}</span>
+                  <span class="priority-${decision.priority}">⚡ ${decision.priority}</span>
+                  <span>🎯 ${decision.impact_scope}</span>
+                  ${decision.deadline ? `<span>⏰ ${new Date(decision.deadline).toLocaleDateString()}</span>` : ''}
                 </div>
-              ` : ''}
-              
-              ${Object.keys(params).length > 0 ? `
-                <div class="parameters">
-                  <strong>Parameters:</strong>
-                  ${Object.entries(params).map(([k,v]) => `<br>• <strong>${k}:</strong> ${v}`).join('')}
+                
+                ${parsedContext.key_points && parsedContext.key_points.length > 0 ? `
+                  <div class="parameters">
+                    <strong>Key Points:</strong>
+                    <ul style="margin: 10px 0 0 0;">
+                      ${parsedContext.key_points.map(point => `<li>${point}</li>`).join('')}
+                    </ul>
+                  </div>
+                ` : ''}
+                
+                ${Object.keys(params).length > 0 ? `
+                  <div class="parameters">
+                    <strong>Parameters:</strong>
+                    ${Object.entries(params).map(([k,v]) => `<br>• <strong>${k}:</strong> ${v}`).join('')}
+                  </div>
+                ` : ''}
+                
+                <div class="witnesses">
+                  <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
+                  ${witnesses.length > 0 ? `<strong>Witnesses:</strong> ${witnesses.join(', ')}` : 'No witnesses'}
+                  <br><small>Confirmed: ${new Date(decision.confirmed_at).toLocaleString()}</small>
+                  ${decision.raw_thread ? '<button class="view-thread-btn" onclick="event.stopPropagation(); showThread(' + decision.id + ')">📧 View Email Thread</button>' : ''}
                 </div>
-              ` : ''}
-              
-              <div class="witnesses">
-                <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
-                ${witnesses.length > 0 ? `<strong>Witnesses:</strong> ${witnesses.join(', ')}` : 'No witnesses'}
-                <br><small>Confirmed: ${new Date(decision.confirmed_at).toLocaleString()}</small>
-                ${decision.raw_thread ? '<button class="view-thread-btn" onclick="event.stopPropagation(); showThread(' + decision.id + ')">📧 View Email Thread</button>' : ''}
               </div>
             </div>
           `;
         }).join('')}
+          </div>
+        `}
         
         <!-- Thread Modal -->
         <div id="threadModal" class="thread-modal">
@@ -289,6 +352,25 @@ export default async function handler(req, res) {
         </div>
         
         <script>
+          function toggleDecision(event, decisionId) {
+            const clickedDecision = event.currentTarget;
+            const allDecisions = document.querySelectorAll('.decision');
+            
+            // If clicking on an already expanded decision, just collapse it
+            if (clickedDecision.classList.contains('expanded')) {
+              clickedDecision.classList.remove('expanded');
+              return;
+            }
+            
+            // Collapse all other decisions
+            allDecisions.forEach(decision => {
+              decision.classList.remove('expanded');
+            });
+            
+            // Expand the clicked decision
+            clickedDecision.classList.add('expanded');
+          }
+          
           async function showThread(decisionId) {
             const modal = document.getElementById('threadModal');
             const title = document.getElementById('threadTitle');
