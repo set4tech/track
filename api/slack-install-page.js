@@ -13,6 +13,9 @@ export default async function handler(req, res) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Install Decision Tracker for Slack</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
             :root {
                 --primary: #00CC88;
@@ -27,10 +30,11 @@ export default async function handler(req, res) {
             }
             
             body { 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                font-family: 'Instrument Sans', -apple-system, sans-serif; 
                 max-width: 600px; margin: 50px auto; padding: 20px; 
                 background: var(--muted); color: var(--foreground); text-align: center;
             }
+            h1, h3 { font-family: 'Hedvig Letters Serif', serif; }
             .header { 
                 background: var(--background); padding: 40px; border-radius: 12px; margin-bottom: 20px; 
                 box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1); border: 1px solid var(--border);

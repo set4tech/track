@@ -21,8 +21,12 @@ export default async function handler(req, res) {
         <html>
         <head>
           <title>Decision Not Found</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
           <style>
-            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+            body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+            h1 { font-family: 'Hedvig Letters Serif', serif; }
             .error { background: #dc2626; color: white; padding: 20px; border-radius: 8px; text-align: center; }
           </style>
         </head>
@@ -42,7 +46,11 @@ export default async function handler(req, res) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Decision Confirmed</title>          <style>
+        <title>Decision Confirmed</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
             :root {
               --primary: #00CC88;
               --secondary: #003B1B;
@@ -54,10 +62,11 @@ export default async function handler(req, res) {
               --muted-foreground: #16a34a;
               --border: #d1fae5;
             }
-            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--muted); color: var(--foreground); }
+            body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--muted); color: var(--foreground); }
+            h1, h2 { font-family: 'Hedvig Letters Serif', serif; }
             .success { background: var(--primary); color: white; padding: 20px; border-radius: 8px; text-align: center; }
             .details { background: var(--background); padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid var(--border); }
-            .button { background: var(--secondary); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 5px; transition: background 0.2s; }
+            .button { background: var(--secondary); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 5px; transition: background 0.2s; font-weight: 500; }
             .button:hover { background: var(--accent); }
           </style>
       </head>
@@ -89,8 +98,12 @@ export default async function handler(req, res) {
       <html>
       <head>
         <title>Error</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+          body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+          h1 { font-family: 'Hedvig Letters Serif', serif; }
           .error { background: #dc2626; color: white; padding: 20px; border-radius: 8px; text-align: center; }
         </style>
       </head>

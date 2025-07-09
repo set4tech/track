@@ -31,6 +31,9 @@ export default async function handler(req, res) {
       <head>
         <title>Decision Log</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
           :root {
             --primary: #00CC88;
@@ -47,11 +50,11 @@ export default async function handler(req, res) {
           }
           
           body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Instrument Sans', -apple-system, sans-serif; 
             max-width: 1200px; margin: 0 auto; padding: 20px; 
             background: var(--muted); color: var(--foreground);
           }
-          h1 { color: var(--secondary); margin-bottom: 10px; }
+          h1 { font-family: 'Hedvig Letters Serif', serif; color: var(--secondary); margin-bottom: 10px; }
           .header { 
             background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; 
             box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border);
@@ -72,7 +75,7 @@ export default async function handler(req, res) {
             box-shadow: 0 8px 24px rgba(0, 204, 136, 0.15); 
             border-color: var(--primary);
           }
-          .decision h3 { margin-top: 0; color: var(--secondary); font-size: 1.25rem; }
+          .decision h3 { font-family: 'Hedvig Letters Serif', serif; margin-top: 0; color: var(--secondary); font-size: 1.25rem; }
           .meta { 
             display: flex; gap: 15px; color: var(--muted-foreground); font-size: 14px; margin: 15px 0;
             flex-wrap: wrap;
@@ -209,7 +212,7 @@ export default async function handler(req, res) {
         
         ${rows.length === 0 ? `
           <div class="empty">
-            <h2>No confirmed decisions yet</h2>
+            <h2 style="font-family: 'Hedvig Letters Serif', serif;">No confirmed decisions yet</h2>
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
             <p><a href="/api/slack-install-page" style="color: var(--primary);">📱 Install Slack Bot</a></p>
           </div>
@@ -276,7 +279,7 @@ export default async function handler(req, res) {
           <div class="thread-content">
             <button class="close-btn" onclick="closeThread()">&times;</button>
             <div class="thread-header">
-              <h2 id="threadTitle">Email Thread</h2>
+              <h2 id="threadTitle" style="font-family: 'Hedvig Letters Serif', serif;">Email Thread</h2>
               <div id="threadMeta"></div>
             </div>
             <div class="thread-body">
@@ -349,8 +352,9 @@ export default async function handler(req, res) {
               if (response.ok) {
                 const printWindow = window.open('', '_blank');
                 const printContent = '<!DOCTYPE html><html><head><title>' + decision.decision_summary + '</title>' +
-                  '<style>body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
-                  'h1 { color: #003B1B; border-bottom: 2px solid #d1fae5; padding-bottom: 10px; }' +
+                  '<style>@import url(\'https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap\');' +
+                  'body { font-family: \'Instrument Sans\', -apple-system, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }' +
+                  'h1 { font-family: \'Hedvig Letters Serif\', serif; color: #003B1B; border-bottom: 2px solid #d1fae5; padding-bottom: 10px; }' +
                   '.meta { background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; }' +
                   '.section { margin: 20px 0; } .section h3 { color: #003B1B; margin-bottom: 10px; }' +
                   '.parameters { background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #00CC88; }' +
