@@ -85,10 +85,6 @@ export default async function handler(req, res) {
         </style>
       </head>
       <body>
-        <div class="nav">
-          <a href="/api/debug">🔧 Debug</a>
-        </div>
-        
         <div class="header">
           <h1>📋 Decision Log ${config.isProduction ? '' : `(${config.environment})`}</h1>
           ${!config.isProduction ? `
