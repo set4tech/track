@@ -285,7 +285,7 @@ export default async function handler(req, res) {
           const witnesses = decision.witnesses || [];
           
           return `
-            <div class="decision" onclick="toggleDecision(event, ${decision.id})">
+            <div class="decision" data-id="${decision.id}">
               <h3>${decision.decision_summary}</h3>
               <div class="decision-maker">
                 <strong>${decision.decision_maker}</strong>
@@ -352,24 +352,35 @@ export default async function handler(req, res) {
         </div>
         
         <script>
-          function toggleDecision(event, decisionId) {
-            const clickedDecision = event.currentTarget;
-            const allDecisions = document.querySelectorAll('.decision');
-            
-            // If clicking on an already expanded decision, just collapse it
-            if (clickedDecision.classList.contains('expanded')) {
-              clickedDecision.classList.remove('expanded');
-              return;
-            }
-            
-            // Collapse all other decisions
-            allDecisions.forEach(decision => {
-              decision.classList.remove('expanded');
+          document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to all decision tiles
+            const decisions = document.querySelectorAll('.decision');
+            decisions.forEach(decision => {
+              decision.addEventListener('click', function(event) {
+                // Don't toggle if clicking on buttons or links inside
+                if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') {
+                  return;
+                }
+                
+                const clickedDecision = this;
+                const allDecisions = document.querySelectorAll('.decision');
+                
+                // If clicking on an already expanded decision, just collapse it
+                if (clickedDecision.classList.contains('expanded')) {
+                  clickedDecision.classList.remove('expanded');
+                  return;
+                }
+                
+                // Collapse all other decisions
+                allDecisions.forEach(d => {
+                  d.classList.remove('expanded');
+                });
+                
+                // Expand the clicked decision
+                clickedDecision.classList.add('expanded');
+              });
             });
-            
-            // Expand the clicked decision
-            clickedDecision.classList.add('expanded');
-          }
+          });
           
           async function showThread(decisionId) {
             const modal = document.getElementById('threadModal');
