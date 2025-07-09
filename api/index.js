@@ -1,6 +1,7 @@
 import { sql } from '../lib/database.js';
 import { getConfig } from '../lib/config.js';
 
+// Trigger Vercel deployment test
 export default async function handler(req, res) {
   try {
     const { team_id } = req.query;
