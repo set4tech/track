@@ -111,6 +111,6 @@ Required for local development (in `.env.local`):
 - Always use ES6 module syntax (import/export)
 - Database operations should use the utilities in `/lib/database.js`
 - Email sending uses SendGrid via `/lib/email.js`
-- Test webhook endpoints exist for development (`/api/test-webhook`, `/api/simple-test`)
+- Test webhook endpoints exist for development
 - Vercel functions have a 10-second timeout limit
 - Database branching is automatic for preview deployments via Neon integration

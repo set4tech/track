@@ -146,8 +146,7 @@ npm run test:manual list
 
 - `GET /` - View confirmed decisions (homepage)
 - `POST /api/webhook-inbound` - Webhook for processing incoming emails
-- `POST /api/test-webhook` - Simplified webhook for testing (no OpenAI)
-- `POST /api/simple-test` - Direct database insertion for testing
+
 - `GET /api/confirm-decision?token=<token>` - Confirm a decision
 - `GET /api/decisions-ui` - View confirmed decisions
 - `GET /api/setup-decisions-db` - Initialize database table
