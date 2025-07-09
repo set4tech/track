@@ -220,10 +220,11 @@ export default async function handler(req, res) {
             background: #ef4444;
             color: white;
             border: none;
-            padding: 6px 10px;
+            padding: 4px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
+            font-weight: 500;
             opacity: 0;
             transition: all 0.2s;
           }
@@ -328,7 +329,7 @@ export default async function handler(req, res) {
           
           return `
             <div class="decision" data-id="${decision.id}">
-              <button class="remove-button" onclick="event.stopPropagation(); removeDecision(${decision.id})" title="Remove decision">×</button>
+              <button class="remove-button" onclick="event.stopPropagation(); removeDecision(${decision.id})" title="Remove decision">Delete</button>
               <h3>${decision.decision_summary}</h3>
               <div class="decision-maker">
                 <strong>${decision.decision_maker}</strong>
