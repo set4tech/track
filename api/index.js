@@ -516,7 +516,7 @@ export default async function handler(req, res) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                  const decisionElement = document.querySelector(`.decision[data-id="${decisionId}"]`);
+                  const decisionElement = document.querySelector('.decision[data-id="' + decisionId + '"]');
                   if (decisionElement) {
                     decisionElement.style.opacity = '0';
                     decisionElement.style.transform = 'scale(0.9)';
