@@ -5,7 +5,13 @@ import crypto from 'crypto';
 import formidable from 'formidable';
 import { getConfig } from '../lib/config.js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://oai.helicone.ai/v1",
+  defaultHeaders: {
+    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+  },
+});
 
 // Initialize SendGrid with error handling
 try {
