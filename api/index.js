@@ -8,15 +8,11 @@ export default async function handler(req, res) {
     
     let rows;
     
-    // Filter by environment
-    const currentEnvironment = config.environment;
-    
     if (team_id) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed' 
           AND slack_team_id = ${team_id}
-          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -24,7 +20,6 @@ export default async function handler(req, res) {
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed'
-          AND (environment = ${currentEnvironment} OR environment IS NULL)
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
