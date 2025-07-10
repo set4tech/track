@@ -545,6 +545,12 @@ export default async function handler(req, res) {
                 if (response.ok) {
                   const decisionElement = document.querySelector('.decision[data-id="' + decisionId + '"]');
                   if (decisionElement) {
+                    // If the decision was expanded, clean up the UI state
+                    if (decisionElement.classList.contains('expanded')) {
+                      decisionElement.classList.remove('expanded');
+                      toggleBackdrop(false);
+                    }
+                    
                     decisionElement.style.opacity = '0';
                     decisionElement.style.transform = 'scale(0.9)';
                     setTimeout(() => {
