@@ -112,10 +112,14 @@ export default async function handler(req, res) {
     
     // Check if bot is included (either CC or TO)
     const botDomain = '@bot.set4.io';
-    const botPrefix = 'decisions';
-    const isBotIncluded = (cc && cc.toLowerCase().includes(botPrefix) && cc.toLowerCase().includes(botDomain)) || 
-                          (to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain));
-    const isTO = to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain);
+    const botPrefixes = ['decisions', 'decision']; // Accept both singular and plural
+    const isBotIncluded = botPrefixes.some(prefix => 
+      (cc && cc.toLowerCase().includes(prefix) && cc.toLowerCase().includes(botDomain)) || 
+      (to && to.toLowerCase().includes(prefix) && to.toLowerCase().includes(botDomain))
+    );
+    const isTO = botPrefixes.some(prefix => 
+      to && to.toLowerCase().includes(prefix) && to.toLowerCase().includes(botDomain)
+    );
     
     // Determine environment from email address
     let detectedEnvironment = 'production';
@@ -145,7 +149,7 @@ export default async function handler(req, res) {
       // Extract all participants
       const allEmails = [from, ...(to?.split(',') || []), ...(cc?.split(',') || [])]
         .map(e => e.trim().match(/<(.+)>/) ? e.match(/<(.+)>/)[1] : e)
-        .filter(e => e && !(e.includes(botPrefix) && e.includes(botDomain)));
+        .filter(e => e && !botPrefixes.some(prefix => e.includes(prefix) && e.includes(botDomain)));
       
       const uniqueEmails = [...new Set(allEmails)];
       
@@ -234,7 +238,7 @@ Return JSON with:
       // SEND EMAIL IMMEDIATELY BEFORE TAG EXTRACTION
       const senderEmail = process.env.SENDER_EMAIL || 'decision@bot.set4.io';
       const recipientEmail = from;
-      const ccEmails = cc?.split(',').filter(email => !(email.toLowerCase().includes(botPrefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined;
+      const ccEmails = cc?.split(',').filter(email => !botPrefixes.some(prefix => email.toLowerCase().includes(prefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined;
       
       console.log(`[${Date.now() - startTime}ms] Preparing to send confirmation email:`);
       console.log('  - From:', senderEmail);
