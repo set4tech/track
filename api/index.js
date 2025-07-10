@@ -646,13 +646,75 @@ export default async function handler(req, res) {
         ` : ''}
         
         ${!auth.authenticated ? `
-          <div class="empty">
-            <h2>Please sign in to view decisions</h2>
-            <p>Sign in with your Google or Microsoft account to access your decision log.</p>
+          <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%); color: white; text-align: center; padding: 60px 20px; border-radius: 16px; margin-bottom: 30px;">
+            <h1 style="font-size: 2.5rem; margin: 0 0 20px 0; font-weight: 700;">🤖 Your AI Paperwork Assistant</h1>
+            <p style="font-size: 1.2rem; margin: 0 0 30px 0; opacity: 0.95; max-width: 600px; margin-left: auto; margin-right: auto;">
+              Automatically track decisions, extract key information, and organize your team's paperwork using AI
+            </p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px;">
+            <div style="background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border); text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 15px;">📧</div>
+              <h3 style="color: var(--secondary); margin-bottom: 15px;">Email Integration</h3>
+              <p style="color: var(--muted-foreground); line-height: 1.6;">
+                Simply CC <strong>${config.inboundEmail}</strong> on any email containing decisions or important information. Our AI will automatically extract and organize the key details.
+              </p>
+            </div>
+            
+            <div style="background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border); text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 15px;">🧠</div>
+              <h3 style="color: var(--secondary); margin-bottom: 15px;">AI-Powered Analysis</h3>
+              <p style="color: var(--muted-foreground); line-height: 1.6;">
+                Advanced AI extracts decisions, priorities, deadlines, and key stakeholders automatically. No manual data entry required.
+              </p>
+            </div>
+            
+            <div style="background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border); text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 15px;">🔍</div>
+              <h3 style="color: var(--secondary); margin-bottom: 15px;">Smart Organization</h3>
+              <p style="color: var(--muted-foreground); line-height: 1.6;">
+                Search and filter decisions by tags, priority, date, or stakeholders. Export to PDF for documentation and compliance.
+              </p>
+            </div>
+          </div>
+          
+          <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border); margin-bottom: 40px;">
+            <h2 style="text-align: center; color: var(--secondary); margin-bottom: 30px;">How It Works</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+              <div style="text-align: center;">
+                <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-weight: bold;">1</div>
+                <h4 style="color: var(--secondary); margin-bottom: 10px;">Send Email</h4>
+                <p style="color: var(--muted-foreground); font-size: 14px;">CC ${config.inboundEmail} on emails with decisions or important information</p>
+              </div>
+              <div style="text-align: center;">
+                <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-weight: bold;">2</div>
+                <h4 style="color: var(--secondary); margin-bottom: 10px;">AI Processing</h4>
+                <p style="color: var(--muted-foreground); font-size: 14px;">Our AI extracts key information and sends you a confirmation</p>
+              </div>
+              <div style="text-align: center;">
+                <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-weight: bold;">3</div>
+                <h4 style="color: var(--secondary); margin-bottom: 10px;">Confirm & Track</h4>
+                <p style="color: var(--muted-foreground); font-size: 14px;">Confirm the decision and access it anytime in your dashboard</p>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); color: white; text-align: center; padding: 40px; border-radius: 12px; margin-bottom: 30px;">
+            <h2 style="margin: 0 0 15px 0;">Ready to Get Started?</h2>
+            <p style="margin: 0 0 25px 0; opacity: 0.9;">Sign up for an account to start tracking your team's decisions automatically</p>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+              <a href="/api/slack-install-page" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.3);" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                📱 Add to Slack
+              </a>
+              <button onclick="document.querySelector('.auth-signin-btn').click()" style="background: white; color: var(--secondary); padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                🚀 Sign Up Now
+              </button>
+            </div>
           </div>
         ` : decisionsWithTags.length === 0 ? `
           <div class="empty">
-            <h2 style="font-family: 'Hedvig Letters Serif', serif;">No confirmed decisions yet</h2>
+            <h2>No confirmed decisions yet</h2>
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
             <p><a href="/api/slack-install-page" style="color: var(--primary);">📱 Install Slack Bot</a></p>
           </div>
