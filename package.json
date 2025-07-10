@@ -20,7 +20,12 @@
     "start:local": "npm run db:start && npm run seed && npm test",
     "db:migrate": "node scripts/migrate.js",
     "db:migrate:create": "node scripts/create-migration.js",
-    "sendgrid:setup": "node scripts/setup-sendgrid-inbound.js"
+    "sendgrid:setup": "node scripts/setup-sendgrid-inbound.js",
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -40,8 +45,13 @@
     "sendgrid": "^5.2.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.30.1",
     "dotenv": "^17.1.0",
+    "eslint": "^9.30.1",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
-    "node-fetch": "^3.3.2"
+    "lint-staged": "^16.1.2",
+    "node-fetch": "^3.3.2",
+    "prettier": "^3.6.2"
   }
 }
