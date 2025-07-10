@@ -85,9 +85,12 @@ export default async function handler(req, res) {
     const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
     
     // Check if bot is included (either CC or TO)
-    const isBotIncluded = (cc && cc.toLowerCase().includes(botEmail.split('+')[0])) || 
-                          (to && to.toLowerCase().includes(botEmail.split('+')[0]));
-    const isTO = to && to.toLowerCase().includes(botEmail.split('+')[0]);
+    // Check for the base email (decisions@bot.set4.io) or any plus variant (decisions+*@bot.set4.io)
+    const botDomain = '@bot.set4.io';
+    const botPrefix = 'decisions';
+    const isBotIncluded = (cc && cc.toLowerCase().includes(botPrefix) && cc.toLowerCase().includes(botDomain)) || 
+                          (to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain));
+    const isTO = to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain);
     
     // Determine environment from email address
     let detectedEnvironment = 'production';
@@ -117,7 +120,7 @@ export default async function handler(req, res) {
       // Extract all participants
       const allEmails = [from, ...(to?.split(',') || []), ...(cc?.split(',') || [])]
         .map(e => e.trim().match(/<(.+)>/) ? e.match(/<(.+)>/)[1] : e)
-        .filter(e => e && !e.includes(botEmail.split('+')[0]));
+        .filter(e => e && !(e.includes(botPrefix) && e.includes(botDomain)));
       
       const uniqueEmails = [...new Set(allEmails)];
       
@@ -193,7 +196,7 @@ Return JSON with:
       // Reply in the same thread to confirm decision was logged
       await sgMail.send({
         to: from,
-        cc: cc?.split(',').filter(email => !email.toLowerCase().includes(botEmail.split('+')[0])).join(',') || undefined,
+        cc: cc?.split(',').filter(email => !(email.toLowerCase().includes(botPrefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined,
         from: {
           name: 'Decision Bot',
           email: process.env.SENDER_EMAIL || 'decision@bot.set4.io'
