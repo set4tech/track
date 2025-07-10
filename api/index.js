@@ -477,7 +477,15 @@ export default async function handler(req, res) {
         ${auth.authenticated ? generateUserMenuHTML(auth.user) : generateAuthHTML(csrfToken)}
         
         <div class="header">
-          <h1>Your AI Paperwork Assistant ${config.isProduction ? '' : `(${config.environment})`}</h1>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Your AI Paperwork Assistant ${config.isProduction ? '' : `(${config.environment})`}</h1>
+            <button class="help-button" onclick="showHelp()" title="How it works">
+              <span style="font-size: 20px;">?</span>
+            </button>
+          </div>
+          <div class="cta-banner">
+            <p><strong>📧 Send or CC ${config.inboundEmail}</strong> to get help with your paperwork</p>
+          </div>
           ${!config.isProduction ? `
             <div style="background: #fff3cd; border: 1px solid #ffeebb; padding: 10px; margin: 10px 0; border-radius: 8px;">
               <strong>⚠️ ${config.environment.toUpperCase()} Environment</strong> - 
