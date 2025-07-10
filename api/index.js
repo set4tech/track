@@ -1,18 +1,31 @@
 import { sql } from '../lib/database.js';
 import { getConfig } from '../lib/config.js';
 import { getTagsForDecision } from '../lib/tag-extractor.js';
+import { requireAuth } from '../lib/auth.js';
+import { generateAuthHTML, generateUserMenuHTML } from '../lib/auth-ui.js';
+import { generateCSRFToken } from '../lib/auth.js';
+import cookie from 'cookie';
 
 export default async function handler(req, res) {
   try {
     const { team_id, tags, filter_mode = 'any' } = req.query;
     const config = getConfig();
     
+    // Check authentication
+    const auth = await requireAuth(req, res);
+    
+    // Generate CSRF token for auth forms
+    const csrfToken = generateCSRFToken();
+    
     // Parse tags from query string (can be comma-separated or array)
     const tagIds = tags ? (Array.isArray(tags) ? tags : tags.split(',')).map(id => parseInt(id, 10)) : [];
     
     let rows;
     
-    if (tagIds.length > 0) {
+    // Only show decisions if authenticated
+    if (!auth.authenticated) {
+      rows = [];
+    } else if (tagIds.length > 0) {
       
       // Filter by multiple tags
       if (filter_mode === 'all') {
@@ -36,6 +49,7 @@ export default async function handler(req, res) {
             SELECT d.* 
             FROM decisions d
             WHERE d.status = 'confirmed'
+              AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email})
               AND d.id IN (
                 SELECT dt.decision_id
                 FROM decision_tags dt
@@ -64,6 +78,7 @@ export default async function handler(req, res) {
             JOIN decision_tags dt ON d.id = dt.decision_id
             WHERE d.status = 'confirmed' 
               AND dt.tag_id = ANY(${tagIds})
+              AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email})
             ORDER BY d.confirmed_at DESC
           `;
         rows = result.rows;
@@ -77,9 +92,11 @@ export default async function handler(req, res) {
       `;
       rows = result.rows;
     } else {
+      // Show user's decisions or all decisions based on email
       const result = await sql`
         SELECT * FROM decisions 
         WHERE status = 'confirmed'
+          AND (user_id = ${auth.user.id} OR created_by_email = ${auth.user.email} OR decision_maker = ${auth.user.email})
         ORDER BY confirmed_at DESC
       `;
       rows = result.rows;
@@ -448,6 +465,8 @@ export default async function handler(req, res) {
         </style>
       </head>
       <body>
+        ${auth.authenticated ? generateUserMenuHTML(auth.user) : generateAuthHTML(csrfToken)}
+        
         <div class="header">
           <h1>📋 Decision Log ${config.isProduction ? '' : `(${config.environment})`}</h1>
           ${!config.isProduction ? `
@@ -472,7 +491,7 @@ export default async function handler(req, res) {
           </div>
         </div>
         
-        ${availableTags.length > 0 ? `
+        ${auth.authenticated && availableTags.length > 0 ? `
           <div class="filter-section">
             <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
               <div class="filter-title">Filter by Tags</div>
@@ -517,13 +536,20 @@ export default async function handler(req, res) {
           </div>
         ` : ''}
         
-        ${decisionsWithTags.length === 0 ? `
+        ${!auth.authenticated ? `
+          <div class="empty">
+            <h2>Please sign in to view decisions</h2>
+            <p>Sign in with your Google or Microsoft account to access your decision log.</p>
+          </div>
+        ` : decisionsWithTags.length === 0 ? `
           <div class="empty">
             <h2 style="font-family: 'Hedvig Letters Serif', serif;">No confirmed decisions yet</h2>
             <p>Send an email with a decision and CC <strong>${config.inboundEmail}</strong> or install the Slack bot to get started!</p>
             <p><a href="/api/slack-install-page" style="color: var(--primary);">📱 Install Slack Bot</a></p>
           </div>
-        ` : `
+        ` : ''}
+        
+        ${auth.authenticated ? `
           <div class="decisions-grid">
             ${decisionsWithTags.map(decision => {
           let params = {};
@@ -595,7 +621,7 @@ export default async function handler(req, res) {
           `;
         }).join('')}
           </div>
-        `}
+        ` : ''}
         
         <!-- Overlay Backdrop -->
         <div id="overlayBackdrop" class="overlay-backdrop"></div>
@@ -735,6 +761,12 @@ export default async function handler(req, res) {
                 if (response.ok) {
                   const decisionElement = document.querySelector('.decision[data-id="' + decisionId + '"]');
                   if (decisionElement) {
+                    // If the decision was expanded, clean up the UI state
+                    if (decisionElement.classList.contains('expanded')) {
+                      decisionElement.classList.remove('expanded');
+                      toggleBackdrop(false);
+                    }
+                    
                     decisionElement.style.opacity = '0';
                     decisionElement.style.transform = 'scale(0.9)';
                     setTimeout(() => {

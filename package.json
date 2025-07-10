@@ -27,10 +27,14 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "@azure/msal-node": "^2.16.2",
     "@sendgrid/mail": "^8.1.5",
     "@slack/web-api": "^7.0.0",
     "@vercel/postgres": "^0.10.0",
+    "cookie": "^0.6.0",
     "formidable": "^3.5.4",
+    "google-auth-library": "^9.15.1",
+    "jsonwebtoken": "^9.0.2",
     "openai": "^5.8.2",
     "sendgrid": "^5.2.3"
   },
