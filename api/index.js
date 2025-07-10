@@ -987,6 +987,7 @@ export default async function handler(req, res) {
           // Initialize on page load
           document.addEventListener('DOMContentLoaded', initializeFilters);
           
+<<<<<<< HEAD
 
           // Toggle filters visibility
           function toggleFilters() {
@@ -1005,6 +1006,8 @@ export default async function handler(req, res) {
             }
           }
 
+=======
+>>>>>>> 9197b91 (fix: tz)
           // Convert all dates to user's local timezone
           document.addEventListener('DOMContentLoaded', function() {
             // Convert date-only fields
@@ -1025,7 +1028,6 @@ export default async function handler(req, res) {
               }
             });
           });
-
         </script>
       </body>
       </html>
