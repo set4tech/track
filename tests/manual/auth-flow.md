@@ -1,55 +1,5 @@
 # Manual Test: Authentication Flow
 
-<<<<<<< HEAD
-## Prerequisites
-1. Set up OAuth credentials:
-   - Google: Create OAuth 2.0 Client ID at https://console.cloud.google.com/apis/credentials
-   - Microsoft: Register app at https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade
-2. Add credentials to `.env.local`:
-   ```
-   GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-   MICROSOFT_CLIENT_ID=your-microsoft-client-id
-   MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
-   JWT_SECRET=your-secure-random-string
-   ```
-
-## Test Steps
-
-### 1. Initial Load
-- Navigate to http://localhost:3000 (or your deployment URL)
-- Verify the sign-in UI appears with Google and Microsoft buttons
-- Verify no decisions are shown
-
-### 2. Google Sign-In
-- Click "Sign in with Google"
-- Complete Google OAuth flow
-- Verify you're redirected back and see your user menu
-- Verify you can see your decisions (if any)
-
-### 3. Microsoft Sign-In
-- Sign out first
-- Click "Sign in with Microsoft"
-- Complete Microsoft OAuth flow
-- Verify you're redirected back and see your user menu
-- Verify you can see your decisions (if any)
-
-### 4. Session Persistence
-- Refresh the page
-- Verify you remain signed in
-- Check that the session cookie is set
-
-### 5. Sign Out
-- Click "Sign Out" button
-- Verify you're signed out and see the sign-in UI again
-- Verify session cookie is cleared
-
-### 6. Email Decision Linking
-- Sign in with an account
-- Send a decision email from that email address
-- Verify the decision appears in your account
-
-## Expected Results
-=======
 This document outlines manual tests for the authentication system.
 
 ## Prerequisites
@@ -58,49 +8,60 @@ This document outlines manual tests for the authentication system.
    - Google OAuth client ID
    - Microsoft Azure app registration
 2. Configure `.env.local` with auth variables
-3. Run database migrations: `npm run db:migrate`
 
 ## Test Scenarios
 
-### 1. Google Sign-In Flow
-
-1. Navigate to the main page `/`
+### 1. Google Sign-In
+1. Navigate to the application
 2. Click "Sign in with Google"
 3. Complete Google OAuth flow
 4. Verify:
-   - User menu appears with name/email
-   - Decisions are visible
-   - Session persists on page refresh
+   - Redirected back to app
+   - User menu appears with profile info
+   - Can view decisions
 
-### 2. Microsoft Sign-In Flow
-
-1. Navigate to the main page `/`
+### 2. Microsoft Sign-In
+1. Sign out if already logged in
 2. Click "Sign in with Microsoft"
 3. Complete Microsoft OAuth flow
 4. Verify:
-   - User menu appears with name/email
-   - Decisions are visible
-   - Session persists on page refresh
+   - Redirected back to app
+   - User menu appears with profile info
+   - Can view decisions
 
-### 3. Sign Out Flow
+### 3. Sign Out
+1. Click "Sign Out" in user menu
+2. Verify:
+   - Redirected to sign-in page
+   - Session cookie cleared
+   - Cannot access decisions
 
+### 4. Session Persistence
 1. Sign in with either provider
-2. Click "Sign Out" button
+2. Refresh the page
 3. Verify:
-   - Returns to sign-in screen
-   - Decisions are no longer visible
-   - Session is cleared
+   - Still signed in
+   - User info retained
 
-### 4. Decision Association
-
-1. Sign in with an account
-2. Send an email decision using the same email address
+### 5. Email-Based Decision Access
+1. Sign in with email@example.com
+2. Create decisions with that email
 3. Verify:
-   - Decision appears in the UI
-   - Decision is linked to your user account
+   - Can see decisions made by that email
+   - Cannot see other users' decisions
 
-### 5. Session Expiry
+### 6. CSRF Protection
+1. Open browser dev tools
+2. Try to make auth request without CSRF token
+3. Verify:
+   - Request is rejected with 403
 
+### 7. Domain Restrictions (if configured)
+1. Try to sign in with non-allowed domain
+2. Verify:
+   - Login rejected with error message
+
+### 8. Session Expiry
 1. Sign in successfully
 2. Wait 15 minutes (session timeout)
 3. Refresh the page
@@ -110,7 +71,6 @@ This document outlines manual tests for the authentication system.
 
 ## Expected Results
 
->>>>>>> origin/dev
 - Sign-in/out flows work smoothly
 - Sessions persist across page refreshes
 - Decisions are properly linked to user accounts

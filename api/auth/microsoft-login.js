@@ -4,18 +4,6 @@ import cookie from 'cookie';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-<<<<<<< HEAD
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  try {
-    // Parse cookies
-    const cookies = cookie.parse(req.headers.cookie || '');
-    
-    // Validate CSRF token
-    const csrfCookie = cookies[AUTH_CONFIG.csrf.cookieName];
-    const csrfHeader = req.headers[AUTH_CONFIG.csrf.headerName];
-=======
     // GET request - show Microsoft OAuth page
     const html = `
       <!DOCTYPE html>
@@ -125,39 +113,25 @@ export default async function handler(req, res) {
     const cookies = cookie.parse(req.headers.cookie || '');
     const csrfCookie = cookies[AUTH_CONFIG.csrf.cookieName];
     const csrfHeader = req.headers['x-csrf-token'];
->>>>>>> origin/dev
     
     if (!validateCSRFToken(csrfCookie, csrfHeader)) {
       return res.status(403).json({ error: 'Invalid CSRF token' });
     }
     
-<<<<<<< HEAD
-    // Extract Microsoft ID token
-    const { idToken } = req.body;
-=======
     const { idToken } = req.body;
     
->>>>>>> origin/dev
     if (!idToken) {
       return res.status(400).json({ error: 'No ID token provided' });
     }
     
-<<<<<<< HEAD
-    // Verify the token
-=======
     // Verify the Microsoft ID token
->>>>>>> origin/dev
     const profile = await verifyMicrosoftToken(idToken);
     
     // Find or create user
     const user = await findOrCreateUser(profile);
     
     // Generate session token
-<<<<<<< HEAD
-    const { token, jti } = generateSessionToken(user);
-=======
     const { token } = generateSessionToken(user);
->>>>>>> origin/dev
     
     // Set session cookie
     res.setHeader('Set-Cookie', cookie.serialize(
@@ -166,35 +140,18 @@ export default async function handler(req, res) {
       AUTH_CONFIG.jwt.cookieOptions
     ));
     
-<<<<<<< HEAD
-    // Return success with user info
-    return res.status(200).json({
-      success: true,
-=======
     return res.status(200).json({ 
       success: true, 
->>>>>>> origin/dev
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-<<<<<<< HEAD
-        picture: user.picture
-=======
         provider: user.provider
->>>>>>> origin/dev
       }
     });
     
   } catch (error) {
     console.error('Microsoft login error:', error);
-<<<<<<< HEAD
-    return res.status(401).json({ 
-      error: 'Authentication failed',
-      message: error.message 
-    });
-=======
     return res.status(401).json({ error: error.message });
->>>>>>> origin/dev
   }
 }
