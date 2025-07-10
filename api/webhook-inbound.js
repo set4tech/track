@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import crypto from 'crypto';
 import formidable from 'formidable';
 import { getConfig } from '../lib/config.js';
+import { extractTagsFromDecision, attachTagsToDecision } from '../lib/tag-extractor.js';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY,
@@ -85,9 +86,12 @@ export default async function handler(req, res) {
     const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
     
     // Check if bot is included (either CC or TO)
-    const isBotIncluded = (cc && cc.toLowerCase().includes(botEmail.split('+')[0])) || 
-                          (to && to.toLowerCase().includes(botEmail.split('+')[0]));
-    const isTO = to && to.toLowerCase().includes(botEmail.split('+')[0]);
+    // Check for the base email (decisions@bot.set4.io) or any plus variant (decisions+*@bot.set4.io)
+    const botDomain = '@bot.set4.io';
+    const botPrefix = 'decisions';
+    const isBotIncluded = (cc && cc.toLowerCase().includes(botPrefix) && cc.toLowerCase().includes(botDomain)) || 
+                          (to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain));
+    const isTO = to && to.toLowerCase().includes(botPrefix) && to.toLowerCase().includes(botDomain);
     
     // Determine environment from email address
     let detectedEnvironment = 'production';
@@ -103,8 +107,8 @@ export default async function handler(req, res) {
       if (match) detectedEnvironment = match[1];
     }
     
-    if (isBotIncluded && !isTO) {
-      // Process as decision (bot in CC)
+    if (isBotIncluded) {
+      // Process as decision (bot in CC or TO)
       // Check if already processed
       const existing = await sql`
         SELECT id FROM decisions WHERE message_id = ${messageId}
@@ -117,7 +121,7 @@ export default async function handler(req, res) {
       // Extract all participants
       const allEmails = [from, ...(to?.split(',') || []), ...(cc?.split(',') || [])]
         .map(e => e.trim().match(/<(.+)>/) ? e.match(/<(.+)>/)[1] : e)
-        .filter(e => e && !e.includes(botEmail.split('+')[0]));
+        .filter(e => e && !(e.includes(botPrefix) && e.includes(botDomain)));
       
       const uniqueEmails = [...new Set(allEmails)];
       
@@ -179,7 +183,7 @@ Return JSON with:
       const userId = userResult.rows.length > 0 ? userResult.rows[0].id : null;
       
       // Store decision (automatically confirmed)
-      await sql`
+      const result = await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
           decision_date, topic, parameters, priority, decision_type,
@@ -194,12 +198,38 @@ Return JSON with:
           ${parsed.impact_scope}, ${text}, ${JSON.stringify(parsed)},
           ${new Date()}, ${userId}, ${parsed.decision_maker || from}
         )
+        RETURNING id
       `;
+      
+      // Extract and attach tags
+      const decisionId = result.rows[0].id;
+      const decisionData = {
+        id: decisionId,
+        decision_summary: parsed.decision_summary,
+        topic: parsed.topic,
+        decision_type: parsed.decision_type,
+        impact_scope: parsed.impact_scope,
+        parsed_context: JSON.stringify(parsed)
+      };
+      
+      try {
+        console.log(`Extracting tags for decision ${decisionId}...`);
+        const tags = await extractTagsFromDecision(decisionData);
+        console.log(`Extracted ${tags.length} tags:`, tags);
+        
+        if (tags.length > 0) {
+          const attached = await attachTagsToDecision(decisionId, tags);
+          console.log(`Tag attachment result: ${attached}`);
+        }
+      } catch (tagError) {
+        console.error('Tag extraction/attachment error:', tagError);
+        // Don't fail the whole request if tags fail
+      }
       
       // Reply in the same thread to confirm decision was logged
       await sgMail.send({
         to: from,
-        cc: cc?.split(',').filter(email => !email.toLowerCase().includes(botEmail.split('+')[0])).join(',') || undefined,
+        cc: cc?.split(',').filter(email => !(email.toLowerCase().includes(botPrefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined,
         from: {
           name: 'Decision Bot',
           email: process.env.SENDER_EMAIL || 'decision@bot.set4.io'
@@ -218,27 +248,6 @@ View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
       
       res.status(200).json({ status: 'success', decision: parsed });
       
-    } else if (isTO) {
-      // Query for confirmed decisions (bot in TO)
-      const { rows } = await sql`
-        SELECT * FROM decisions 
-        WHERE status = 'confirmed'
-        ORDER BY created_at DESC 
-        LIMIT 10
-      `;
-      
-      const decisionsList = rows.length > 0 
-        ? rows.map((d, i) => `${i + 1}. ${d.decision_summary} (${new Date(d.created_at).toLocaleDateString()})`).join('\n')
-        : 'No decisions found.';
-      
-      await sgMail.send({
-        to: from,
-        from: process.env.SENDER_EMAIL,
-        subject: `Re: ${subject}`,
-        text: `Recent decisions:\n\n${decisionsList}\n\nView all: https://track-sigma-nine.vercel.app/api/decisions-ui`
-      });
-      
-      res.status(200).json({ status: 'query_sent' });
     } else {
       res.status(200).json({ status: 'ignored' });
     }
