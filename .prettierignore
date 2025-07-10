@@ -1,0 +1,9 @@
+node_modules
+.vercel
+coverage
+dist
+*.min.js
+.env*
+scripts/migrations
+package-lock.json
+.husky
