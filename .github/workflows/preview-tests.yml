@@ -50,40 +50,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Get Branch Database URL
-      id: get-db-url
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-        VERCEL_ORG_ID: ${{ secrets.ORG_ID }}
-        POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+    - name: Setup Database URL
       run: |
-        # Check if we have Vercel API credentials
-        if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ] || [ -z "$VERCEL_ORG_ID" ]; then
-          echo "Vercel API credentials not found, using default POSTGRES_URL"
-          echo "DATABASE_URL=$POSTGRES_URL" >> $GITHUB_ENV
-          echo "Using default database URL (Neon will handle branching)"
-          exit 0
-        fi
-        
-        # Get the deployment ID from the preview URL
-        PREVIEW_URL="${{ needs.wait-for-vercel-preview.outputs.preview-url }}"
-        DEPLOYMENT_ID=$(echo $PREVIEW_URL | grep -oP '(?<=track-)[^.]+')
-        
-        # Get deployment details from Vercel API
-        DEPLOYMENT_INFO=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-          "https://api.vercel.com/v13/deployments/$DEPLOYMENT_ID?withGitRepoInfo=true")
-        
-        # Extract the branch database URL from environment variables
-        DB_URL=$(echo $DEPLOYMENT_INFO | jq -r '.env.POSTGRES_URL // .env.DATABASE_URL // empty')
-        
-        if [ -z "$DB_URL" ]; then
-          echo "No branch database URL found in deployment, using default"
-          echo "DATABASE_URL=$POSTGRES_URL" >> $GITHUB_ENV
-        else
-          echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
-          echo "Branch database URL found"
-        fi
+        # Neon automatically creates branch databases for preview deployments
+        # We just need to use the POSTGRES_URL and Neon handles the rest
+        echo "Using Neon automatic branch database"
     
     - name: Run migrations on branch database
       run: |
@@ -91,14 +62,14 @@ jobs:
         npm run db:migrate
         echo "✅ Migrations completed (including auth tables)"
       env:
-        POSTGRES_URL: ${{ env.DATABASE_URL }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
+        POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        DATABASE_URL: ${{ secrets.POSTGRES_URL }}
     
     - name: Run integration tests against branch database
       run: npm test
       env:
-        POSTGRES_URL: ${{ env.DATABASE_URL }}
-        DATABASE_URL: ${{ env.DATABASE_URL }}
+        POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        DATABASE_URL: ${{ secrets.POSTGRES_URL }}
         TEST_BASE_URL: ${{ needs.wait-for-vercel-preview.outputs.preview-url }}
         SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
