@@ -392,7 +392,83 @@ class IntegrationTester {
         }
       });
 
-      // Test 8: API endpoint availability
+      // Test 8: Witness filtering functionality
+      await this.test('Witness Filtering', async () => {
+        // Create decisions with witnesses
+        const decisionMaker = TEST_EMAIL;
+        const witness1 = 'witness1@example.com';
+        const witness2 = 'witness2@example.com';
+        
+        // Decision where TEST_EMAIL is the maker
+        const makerData = {
+          from: decisionMaker,
+          to: witness1,
+          cc: witness2,
+          subject: 'Decision as Maker',
+          text: 'I have decided to proceed with the new feature implementation.'
+        };
+        
+        let response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(makerData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to create maker decision: ${response.status}`);
+        }
+        
+        // Decision where TEST_EMAIL is a witness
+        const witnessData = {
+          from: witness1,
+          to: witness2,
+          cc: decisionMaker,
+          subject: 'Decision as Witness',
+          text: 'I have decided to upgrade our infrastructure to AWS.'
+        };
+        
+        response = await fetch(`${BASE_URL}/api/webhook-inbound`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(witnessData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to create witness decision: ${response.status}`);
+        }
+        
+        // Verify both decisions exist in database
+        const allDecisions = await sql`
+          SELECT decision_maker, witnesses 
+          FROM decisions 
+          WHERE status = 'confirmed'
+            AND (decision_maker = ${decisionMaker} OR ${decisionMaker} = ANY(witnesses))
+          ORDER BY created_at DESC
+          LIMIT 2
+        `;
+        
+        if (allDecisions.rows.length < 2) {
+          throw new Error(`Expected at least 2 decisions, found ${allDecisions.rows.length}`);
+        }
+        
+        // Verify maker-only filter
+        const makerOnlyDecisions = await sql`
+          SELECT decision_maker 
+          FROM decisions 
+          WHERE status = 'confirmed'
+            AND decision_maker = ${decisionMaker}
+        `;
+        
+        const makerCount = makerOnlyDecisions.rows.length;
+        if (makerCount === 0) {
+          throw new Error('No decisions found where user is the maker');
+        }
+        
+        console.log(`✓ Found ${makerCount} decisions where user is maker`);
+        console.log(`✓ Found ${allDecisions.rows.length} total decisions involving user`);
+      });
+
+      // Test 9: API endpoint availability
       await this.test('API Endpoint Availability', async () => {
         const endpoints = [
           '/api/webhook-inbound',

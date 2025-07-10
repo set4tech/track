@@ -9,7 +9,7 @@ import cookie from 'cookie';
 export default async function handler(req, res) {
   try {
     console.log('Starting index handler...');
-    const { team_id, tags, filter_mode = 'any' } = req.query;
+    const { team_id, tags, filter_mode = 'any', role } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
     
@@ -48,20 +48,35 @@ export default async function handler(req, res) {
               )
             ORDER BY d.confirmed_at DESC
           ` :
-          await sql`
-            SELECT d.* 
-            FROM decisions d
-            WHERE d.status = 'confirmed'
-              AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email})
-              AND d.id IN (
-                SELECT dt.decision_id
-                FROM decision_tags dt
-                WHERE dt.tag_id = ANY(${tagIds})
-                GROUP BY dt.decision_id
-                HAVING COUNT(DISTINCT dt.tag_id) = ${tagIds.length}
-              )
-            ORDER BY d.confirmed_at DESC
-          `;
+          role === 'maker'
+            ? await sql`
+                SELECT d.* 
+                FROM decisions d
+                WHERE d.status = 'confirmed'
+                  AND d.decision_maker = ${auth.user.email}
+                  AND d.id IN (
+                    SELECT dt.decision_id
+                    FROM decision_tags dt
+                    WHERE dt.tag_id = ANY(${tagIds})
+                    GROUP BY dt.decision_id
+                    HAVING COUNT(DISTINCT dt.tag_id) = ${tagIds.length}
+                  )
+                ORDER BY d.confirmed_at DESC
+              `
+            : await sql`
+                SELECT d.* 
+                FROM decisions d
+                WHERE d.status = 'confirmed'
+                  AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email} OR ${auth.user.email} = ANY(d.witnesses))
+                  AND d.id IN (
+                    SELECT dt.decision_id
+                    FROM decision_tags dt
+                    WHERE dt.tag_id = ANY(${tagIds})
+                    GROUP BY dt.decision_id
+                    HAVING COUNT(DISTINCT dt.tag_id) = ${tagIds.length}
+                  )
+                ORDER BY d.confirmed_at DESC
+              `;
         rows = result.rows;
       } else {
         // OR logic (default) - decisions with ANY of the selected tags
@@ -75,15 +90,25 @@ export default async function handler(req, res) {
               AND d.slack_team_id = ${team_id}
             ORDER BY d.confirmed_at DESC
           ` :
-          await sql`
-            SELECT DISTINCT d.* 
-            FROM decisions d
-            JOIN decision_tags dt ON d.id = dt.decision_id
-            WHERE d.status = 'confirmed' 
-              AND dt.tag_id = ANY(${tagIds})
-              AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email})
-            ORDER BY d.confirmed_at DESC
-          `;
+          role === 'maker'
+            ? await sql`
+                SELECT DISTINCT d.* 
+                FROM decisions d
+                JOIN decision_tags dt ON d.id = dt.decision_id
+                WHERE d.status = 'confirmed' 
+                  AND dt.tag_id = ANY(${tagIds})
+                  AND d.decision_maker = ${auth.user.email}
+                ORDER BY d.confirmed_at DESC
+              `
+            : await sql`
+                SELECT DISTINCT d.* 
+                FROM decisions d
+                JOIN decision_tags dt ON d.id = dt.decision_id
+                WHERE d.status = 'confirmed' 
+                  AND dt.tag_id = ANY(${tagIds})
+                  AND (d.user_id = ${auth.user.id} OR d.created_by_email = ${auth.user.email} OR d.decision_maker = ${auth.user.email} OR ${auth.user.email} = ANY(d.witnesses))
+                ORDER BY d.confirmed_at DESC
+              `;
         rows = result.rows;
       }
     } else if (team_id) {
@@ -95,13 +120,25 @@ export default async function handler(req, res) {
       `;
       rows = result.rows;
     } else {
-      // Show user's decisions or all decisions based on email
-      const result = await sql`
-        SELECT * FROM decisions 
-        WHERE status = 'confirmed'
-          AND (user_id = ${auth.user.id} OR created_by_email = ${auth.user.email} OR decision_maker = ${auth.user.email})
-        ORDER BY confirmed_at DESC
-      `;
+      // Show user's decisions based on role filter
+      const result = role === 'maker' 
+        ? await sql`
+            SELECT * FROM decisions 
+            WHERE status = 'confirmed'
+              AND decision_maker = ${auth.user.email}
+            ORDER BY confirmed_at DESC
+          `
+        : await sql`
+            SELECT * FROM decisions 
+            WHERE status = 'confirmed'
+              AND (
+                user_id = ${auth.user.id} 
+                OR created_by_email = ${auth.user.email} 
+                OR decision_maker = ${auth.user.email}
+                OR ${auth.user.email} = ANY(witnesses)
+              )
+            ORDER BY confirmed_at DESC
+          `;
       rows = result.rows;
     }
     
@@ -605,16 +642,28 @@ export default async function handler(req, res) {
               <div class="filter-toggle" id="filterToggle" style="font-size: 18px; transition: transform 0.2s;">▼</div>
             </div>
             <div class="filter-content" id="filterContent" style="display: none;">
-              <div class="filter-controls" style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-                <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                  <input type="radio" name="filter_mode" value="any" checked onchange="updateFilterMode(this.value)">
-                  Match Any
-                </label>
-                <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                  <input type="radio" name="filter_mode" value="all" onchange="updateFilterMode(this.value)">
-                  Match All
-                </label>
-                <button onclick="clearAllFilters()" style="background: var(--muted-foreground); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer;">
+              <div class="filter-controls" style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="filter_mode" value="any" checked onchange="updateFilterMode(this.value)">
+                    Match Any
+                  </label>
+                  <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="filter_mode" value="all" onchange="updateFilterMode(this.value)">
+                    Match All
+                  </label>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; border-left: 1px solid var(--border); padding-left: 10px;">
+                  <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="role_filter" value="all" ${!role ? 'checked' : ''} onchange="updateRoleFilter(this.value)">
+                    All Decisions
+                  </label>
+                  <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="role_filter" value="maker" ${role === 'maker' ? 'checked' : ''} onchange="updateRoleFilter(this.value)">
+                    My Decisions
+                  </label>
+                </div>
+                <button onclick="clearAllFilters()" style="background: var(--muted-foreground); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-left: auto;">
                   Clear All
                 </button>
               </div>
@@ -634,13 +683,20 @@ export default async function handler(req, res) {
                 }).join('')}
               </div>
               <div id="activeFilters" style="margin-top: 10px; font-size: 14px; color: var(--muted-foreground);">
-                ${tagIds.length === 0 ? 
-                  `Showing all ${totalDecisions} decisions` : 
-                  `Showing ${decisionsWithTags.length} of ${totalDecisions} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
-                    const tag = availableTags.find(t => t.id == id);
-                    return tag ? tag.name : id;
-                  }).join(', ')}</strong>`
-                }
+                ${(() => {
+                  let message = '';
+                  if (role === 'maker') {
+                    message = `Showing ${decisionsWithTags.length} decisions where you are the decision maker`;
+                  } else if (tagIds.length === 0) {
+                    message = `Showing all ${totalDecisions} decisions`;
+                  } else {
+                    message = `Showing ${decisionsWithTags.length} of ${totalDecisions} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
+                      const tag = availableTags.find(t => t.id == id);
+                      return tag ? tag.name : id;
+                    }).join(', ')}</strong>`;
+                  }
+                  return message;
+                })()}
               </div>
             </div>
           </div>
@@ -1123,12 +1179,14 @@ export default async function handler(req, res) {
           // Multi-tag filtering functionality
           let selectedTags = [];
           let filterMode = 'any';
+          let roleFilter = 'all';
           
           // Initialize from URL params
           function initializeFilters() {
             const urlParams = new URLSearchParams(window.location.search);
             const tags = urlParams.get('tags');
             filterMode = urlParams.get('filter_mode') || 'any';
+            roleFilter = urlParams.get('role') || 'all';
             
             if (tags) {
               selectedTags = tags.split(',');
@@ -1171,6 +1229,11 @@ export default async function handler(req, res) {
             }
           }
           
+          function updateRoleFilter(role) {
+            roleFilter = role;
+            applyFilters();
+          }
+          
           function clearAllFilters() {
             selectedTags = [];
             document.querySelectorAll('.tag-filter').forEach(btn => {
@@ -1185,6 +1248,10 @@ export default async function handler(req, res) {
             if (selectedTags.length > 0) {
               params.append('tags', selectedTags.join(','));
               params.append('filter_mode', filterMode);
+            }
+            
+            if (roleFilter !== 'all') {
+              params.append('role', roleFilter);
             }
             
             const queryString = params.toString();
