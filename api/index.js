@@ -563,7 +563,6 @@ export default async function handler(req, res) {
         ${auth.authenticated ? `
           <div class="decisions-grid">
             ${decisionsWithTags.map(decision => {
->>>>>>> origin/dev
           let params = {};
           let parsedContext = {};
           try {
