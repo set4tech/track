@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import crypto from 'crypto';
 import formidable from 'formidable';
 import { getConfig } from '../lib/config.js';
+import { extractTagsFromDecision, attachTagsToDecision } from '../lib/tag-extractor.js';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY,
@@ -182,7 +183,7 @@ Return JSON with:
       const userId = userResult.rows.length > 0 ? userResult.rows[0].id : null;
       
       // Store decision (automatically confirmed)
-      await sql`
+      const result = await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
           decision_date, topic, parameters, priority, decision_type,
@@ -197,7 +198,33 @@ Return JSON with:
           ${parsed.impact_scope}, ${text}, ${JSON.stringify(parsed)},
           ${new Date()}, ${userId}, ${parsed.decision_maker || from}
         )
+        RETURNING id
       `;
+      
+      // Extract and attach tags
+      const decisionId = result.rows[0].id;
+      const decisionData = {
+        id: decisionId,
+        decision_summary: parsed.decision_summary,
+        topic: parsed.topic,
+        decision_type: parsed.decision_type,
+        impact_scope: parsed.impact_scope,
+        parsed_context: JSON.stringify(parsed)
+      };
+      
+      try {
+        console.log(`Extracting tags for decision ${decisionId}...`);
+        const tags = await extractTagsFromDecision(decisionData);
+        console.log(`Extracted ${tags.length} tags:`, tags);
+        
+        if (tags.length > 0) {
+          const attached = await attachTagsToDecision(decisionId, tags);
+          console.log(`Tag attachment result: ${attached}`);
+        }
+      } catch (tagError) {
+        console.error('Tag extraction/attachment error:', tagError);
+        // Don't fail the whole request if tags fail
+      }
       
       // Reply in the same thread to confirm decision was logged
       await sgMail.send({
