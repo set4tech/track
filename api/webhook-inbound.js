@@ -58,8 +58,33 @@ async function parseFormData(req) {
   });
 }
 
+// Helper function to extract tags after response is sent
+async function extractTagsInBackground(decisionId, decisionData, startTime) {
+  try {
+    console.log(`[${Date.now() - startTime}ms] Background: Starting tag extraction for decision ${decisionId}...`);
+    const tags = await extractTagsFromDecision(decisionData);
+    console.log(`[${Date.now() - startTime}ms] Background: Extracted ${tags.length} tags:`, tags);
+    
+    if (tags.length > 0) {
+      const attached = await attachTagsToDecision(decisionId, tags);
+      console.log(`[${Date.now() - startTime}ms] Background: Tag attachment completed: ${attached}`);
+    }
+  } catch (tagError) {
+    console.error('Background tag extraction/attachment error:', tagError);
+  }
+}
+
 export default async function handler(req, res) {
+  const startTime = Date.now();
+  console.log(`[${startTime}] Webhook handler started (optimized version)`);
+  
+  // Vercel functions have a 10-second timeout
+  const timeoutWarning = setTimeout(() => {
+    console.error(`[${Date.now() - startTime}ms] WARNING: Approaching 10-second timeout!`);
+  }, 9000);
+  
   if (req.method !== 'POST') {
+    clearTimeout(timeoutWarning);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -86,7 +111,6 @@ export default async function handler(req, res) {
     const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
     
     // Check if bot is included (either CC or TO)
-    // Check for the base email (decisions@bot.set4.io) or any plus variant (decisions+*@bot.set4.io)
     const botDomain = '@bot.set4.io';
     const botPrefix = 'decisions';
     const isBotIncluded = (cc && cc.toLowerCase().includes(botPrefix) && cc.toLowerCase().includes(botDomain)) || 
@@ -99,23 +123,23 @@ export default async function handler(req, res) {
     
     if (recipients.includes('+preview@')) {
       detectedEnvironment = 'preview';
-    } else if (recipients.includes('+local@') || recipients.includes('+dev@')) {
-      detectedEnvironment = 'local';
-    } else if (recipients.includes('+')) {
-      // Extract custom environment from plus addressing
-      const match = recipients.match(/\+([^@]+)@/);
-      if (match) detectedEnvironment = match[1];
+    } else if (recipients.includes('+test@') || recipients.includes('+local@')) {
+      detectedEnvironment = 'test';
     }
     
+    console.log(`Detected environment from email: ${detectedEnvironment}, config environment: ${config.environment}`);
+    
     if (isBotIncluded) {
-      // Process as decision (bot in CC or TO)
-      // Check if already processed
+      // Check for existing decision
+      console.log(`Checking for existing decision with message_id: ${messageId}`);
       const existing = await sql`
         SELECT id FROM decisions WHERE message_id = ${messageId}
       `;
       
       if (existing.rows.length > 0) {
-        return res.status(200).json({ status: 'duplicate' });
+        console.log('Decision already exists, skipping');
+        clearTimeout(timeoutWarning);
+        return res.status(200).json({ status: 'already_processed' });
       }
       
       // Extract all participants
@@ -126,8 +150,9 @@ export default async function handler(req, res) {
       const uniqueEmails = [...new Set(allEmails)];
       
       // Parse with GPT-4
+      console.log(`[${Date.now() - startTime}ms] Starting OpenAI decision extraction...`);
       const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o-mini", // Use faster model for quicker response
         messages: [{
           role: "system",
           content: `Extract decision information from email threads. Decisions can be expressed in various ways:
@@ -169,10 +194,12 @@ Return JSON with:
       });
       
       const parsed = JSON.parse(completion.choices[0].message.content);
+      console.log(`[${Date.now() - startTime}ms] OpenAI decision extraction completed`);
       console.log('OpenAI parsed result:', parsed);
       
       if (!parsed || parsed.confidence < 70) {
         console.log('Decision rejected - confidence too low:', parsed?.confidence);
+        clearTimeout(timeoutWarning);
         return res.status(200).json({ status: 'no_decision_found', confidence: parsed?.confidence });
       }
       
@@ -183,6 +210,7 @@ Return JSON with:
       const userId = userResult.rows.length > 0 ? userResult.rows[0].id : null;
       
       // Store decision (automatically confirmed)
+      console.log(`[${Date.now() - startTime}ms] Storing decision in database...`);
       const result = await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
@@ -201,8 +229,47 @@ Return JSON with:
         RETURNING id
       `;
       
-      // Extract and attach tags
       const decisionId = result.rows[0].id;
+      
+      // SEND EMAIL IMMEDIATELY BEFORE TAG EXTRACTION
+      const senderEmail = process.env.SENDER_EMAIL || 'decision@bot.set4.io';
+      const recipientEmail = from;
+      const ccEmails = cc?.split(',').filter(email => !(email.toLowerCase().includes(botPrefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined;
+      
+      console.log(`[${Date.now() - startTime}ms] Preparing to send confirmation email:`);
+      console.log('  - From:', senderEmail);
+      console.log('  - To:', recipientEmail);
+      console.log('  - CC:', ccEmails || 'none');
+      console.log('  - SendGrid API Key:', process.env.SENDGRID_API_KEY ? 'configured' : 'MISSING');
+      
+      try {
+        const emailResult = await sgMail.send({
+          to: recipientEmail,
+          cc: ccEmails,
+          from: {
+            name: 'Decision Bot',
+            email: senderEmail
+          },
+          subject: `Re: ${subject}`,
+          text: `I have logged this decision:
+
+"${parsed.decision_summary}"
+
+Type: ${parsed.decision_type} (${parsed.priority} priority)
+Impact: ${parsed.impact_scope}
+${parsed.deadline ? `Deadline: ${new Date(parsed.deadline).toLocaleDateString()}\n` : ''}${parsed.key_points?.length ? `\nKey Points:\n${parsed.key_points.map(point => `• ${point}`).join('\n')}` : ''}
+
+View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
+        });
+        console.log(`[${Date.now() - startTime}ms] SendGrid response:`, emailResult);
+        console.log(`[${Date.now() - startTime}ms] Confirmation email sent successfully`);
+      } catch (emailError) {
+        console.error(`[${Date.now() - startTime}ms] Failed to send confirmation email:`, emailError);
+        console.error('SendGrid error details:', emailError.response?.body);
+        // Don't fail the whole request if email fails
+      }
+      
+      // Extract tags AFTER sending email (non-blocking)
       const decisionData = {
         id: decisionId,
         decision_summary: parsed.decision_summary,
@@ -212,47 +279,21 @@ Return JSON with:
         parsed_context: JSON.stringify(parsed)
       };
       
-      try {
-        console.log(`Extracting tags for decision ${decisionId}...`);
-        const tags = await extractTagsFromDecision(decisionData);
-        console.log(`Extracted ${tags.length} tags:`, tags);
-        
-        if (tags.length > 0) {
-          const attached = await attachTagsToDecision(decisionId, tags);
-          console.log(`Tag attachment result: ${attached}`);
-        }
-      } catch (tagError) {
-        console.error('Tag extraction/attachment error:', tagError);
-        // Don't fail the whole request if tags fail
-      }
+      // Start tag extraction but don't wait for it
+      extractTagsInBackground(decisionId, decisionData, startTime);
       
-      // Reply in the same thread to confirm decision was logged
-      await sgMail.send({
-        to: from,
-        cc: cc?.split(',').filter(email => !(email.toLowerCase().includes(botPrefix) && email.toLowerCase().includes(botDomain))).join(',') || undefined,
-        from: {
-          name: 'Decision Bot',
-          email: process.env.SENDER_EMAIL || 'decision@bot.set4.io'
-        },
-        subject: `Re: ${subject}`,
-        text: `I have logged this decision:
-
-"${parsed.decision_summary}"
-
-Type: ${parsed.decision_type} (${parsed.priority} priority)
-Impact: ${parsed.impact_scope}
-${parsed.deadline ? `Deadline: ${new Date(parsed.deadline).toLocaleDateString()}\n` : ''}${parsed.key_points?.length ? `\nKey Points:\n${parsed.key_points.map(point => `• ${point}`).join('\n')}` : ''}
-
-View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
-      });
+      console.log(`[${Date.now() - startTime}ms] Total webhook processing time (excluding background tasks)`);
+      clearTimeout(timeoutWarning);
       
       res.status(200).json({ status: 'success', decision: parsed });
       
     } else {
+      clearTimeout(timeoutWarning);
       res.status(200).json({ status: 'ignored' });
     }
   } catch (error) {
     console.error('Webhook error:', error);
+    clearTimeout(timeoutWarning);
     res.status(500).json({ error: error.message });
   }
 }
