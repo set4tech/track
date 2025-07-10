@@ -12,12 +12,8 @@ export default async function handler(req, res) {
     '',
     {
       ...AUTH_CONFIG.jwt.cookieOptions,
-<<<<<<< HEAD
-      maxAge: 0
-=======
       maxAge: 0,
       expires: new Date(0)
->>>>>>> origin/dev
     }
   ));
   

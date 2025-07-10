@@ -16,10 +16,6 @@ export default async function handler(req, res) {
       id: auth.user.id,
       email: auth.user.email,
       name: auth.user.name,
-<<<<<<< HEAD
-      picture: auth.user.picture,
-      provider: auth.user.provider
-=======
       provider: auth.user.provider,
       picture: auth.user.picture
     },
@@ -27,7 +23,6 @@ export default async function handler(req, res) {
       userId: auth.session.userId,
       provider: auth.session.provider,
       email: auth.session.email
->>>>>>> origin/dev
     }
   });
 }
