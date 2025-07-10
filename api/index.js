@@ -149,7 +149,7 @@ export default async function handler(req, res) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Decision Log</title>
+        <title>Your AI Paperwork Assistant</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -212,8 +212,6 @@ export default async function handler(req, res) {
             width: 90%;
             max-width: 800px;
             height: auto;
-            max-height: 90vh;
-            overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           }
@@ -357,9 +355,9 @@ export default async function handler(req, res) {
           }
           .export-dropdown {
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             right: 0;
-            margin-top: 4px;
+            margin-bottom: 4px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 6px;
@@ -479,7 +477,7 @@ export default async function handler(req, res) {
         ${auth.authenticated ? generateUserMenuHTML(auth.user) : generateAuthHTML(csrfToken)}
         
         <div class="header">
-          <h1>📋 Decision Log ${config.isProduction ? '' : `(${config.environment})`}</h1>
+          <h1>Your AI Paperwork Assistant ${config.isProduction ? '' : `(${config.environment})`}</h1>
           ${!config.isProduction ? `
             <div style="background: #fff3cd; border: 1px solid #ffeebb; padding: 10px; margin: 10px 0; border-radius: 8px;">
               <strong>⚠️ ${config.environment.toUpperCase()} Environment</strong> - 
@@ -504,9 +502,12 @@ export default async function handler(req, res) {
         
         ${auth.authenticated && availableTags.length > 0 ? `
           <div class="filter-section">
-            <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-              <div class="filter-title">Filter by Tags</div>
-              <div class="filter-controls" style="display: flex; gap: 10px; align-items: center;">
+            <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: pointer;" onclick="toggleFilters()">
+              <div class="filter-title">Filters</div>
+              <div class="filter-toggle" id="filterToggle" style="font-size: 18px; transition: transform 0.2s;">▼</div>
+            </div>
+            <div class="filter-content" id="filterContent" style="display: none;">
+              <div class="filter-controls" style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
                 <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
                   <input type="radio" name="filter_mode" value="any" checked onchange="updateFilterMode(this.value)">
                   Match Any
@@ -519,30 +520,30 @@ export default async function handler(req, res) {
                   Clear All
                 </button>
               </div>
-            </div>
-            <div class="tag-filters" id="tagFilters">
-              ${availableTags.map(tag => {
-                const isSelected = tagIds.includes(tag.id);
-                return `
-                  <button 
-                    class="tag-filter${isSelected ? ' selected' : ''}" 
-                    data-tag-id="${tag.id}"
-                    data-tag-name="${tag.name}"
-                    onclick="toggleTag(this)">
-                    ${tag.name}
-                    <span class="tag-count">${tag.decision_count}</span>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-            <div id="activeFilters" style="margin-top: 10px; font-size: 14px; color: var(--muted-foreground);">
-              ${tagIds.length === 0 ? 
-                `Showing all ${totalDecisions} decisions` : 
-                `Showing ${decisionsWithTags.length} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
-                  const tag = availableTags.find(t => t.id == id);
-                  return tag ? tag.name : id;
-                }).join(', ')}</strong>`
-              }
+              <div class="tag-filters" id="tagFilters">
+                ${availableTags.map(tag => {
+                  const isSelected = tagIds.includes(tag.id);
+                  return `
+                    <button 
+                      class="tag-filter${isSelected ? ' selected' : ''}" 
+                      data-tag-id="${tag.id}"
+                      data-tag-name="${tag.name}"
+                      onclick="toggleTag(this)">
+                      ${tag.name}
+                      <span class="tag-count">${tag.decision_count}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <div id="activeFilters" style="margin-top: 10px; font-size: 14px; color: var(--muted-foreground);">
+                ${tagIds.length === 0 ? 
+                  `Showing all ${totalDecisions} decisions` : 
+                  `Showing ${decisionsWithTags.length} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
+                    const tag = availableTags.find(t => t.id == id);
+                    return tag ? tag.name : id;
+                  }).join(', ')}</strong>`
+                }
+              </div>
             </div>
           </div>
         ` : ''}
@@ -592,7 +593,7 @@ export default async function handler(req, res) {
                 <button class="export-button" onclick="event.stopPropagation();">
                   Export
                   <div class="export-dropdown">
-                    <a href="#" class="export-option" onclick="event.preventDefault(); exportToPDF(${decision.id}); return false;">📄 Export to PDF</a>
+                    <a href="#" class="export-option" onclick="event.preventDefault(); exportToPDF(${decision.id}); return false;">📄 to PDF</a>
                   </div>
                 </button>
                 
@@ -939,6 +940,20 @@ export default async function handler(req, res) {
           
           // Initialize on page load
           document.addEventListener('DOMContentLoaded', initializeFilters);
+          
+          // Toggle filters visibility
+          function toggleFilters() {
+            const content = document.getElementById('filterContent');
+            const toggle = document.getElementById('filterToggle');
+            
+            if (content.style.display === 'none') {
+              content.style.display = 'block';
+              toggle.style.transform = 'rotate(180deg)';
+            } else {
+              content.style.display = 'none';
+              toggle.style.transform = 'rotate(0deg)';
+            }
+          }
         </script>
       </body>
       </html>
