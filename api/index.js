@@ -3,6 +3,7 @@ import { requireAuth, generateCSRFToken } from '../lib/auth.js';
 import { generateIntegratedAuthHTML } from '../lib/auth-ui.js';
 import { getDecisionsForUser, getDecisionsWithTags, getAllAvailableTags, getTotalDecisionsCount } from '../lib/decision-queries.js';
 import { generateDecisionHTML } from '../lib/ui/html-generator.js';
+import { getTagsForDecision } from '../lib/tag-extractor.js';
 
 export default async function handler(req, res) {
   try {
@@ -10,14 +11,14 @@ export default async function handler(req, res) {
     const { team_id, tags, filter_mode = 'any', role } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
-    
+
     // Check authentication
     const auth = await requireAuth(req, res);
     console.log('Auth check complete:', auth.authenticated);
-    
+
     // Generate CSRF token for auth forms
     const csrfToken = generateCSRFToken();
-    
+
     // Parse tags from query string (can be comma-separated or array)
     const tagIds = tags ? (Array.isArray(tags) ? tags : tags.split(',')).map(id => parseInt(id, 10)) : [];
     
@@ -49,9 +50,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('UI error:', error);
     console.error('Error stack:', error.stack);
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message,
-      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
     });
   }
 }
