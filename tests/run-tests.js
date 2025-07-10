@@ -156,7 +156,9 @@ const mockModules = {
               message: {
                 content: JSON.stringify({
                   decision_summary: 'Test decision',
-                  confidence: 85
+                  confidence: 85,
+                  decision_type: 'technical',
+                  priority: 'medium'
                 })
               }
             }]
@@ -189,10 +191,10 @@ describe('Webhook Integration Tests', () => {
   it('should reject non-decisions', async () => {
     const mockNonDecision = {
       text: 'Thank you for the meeting yesterday',
-      confidence: 30
+      confidence: 40
     };
     
-    expect(mockNonDecision.confidence).toBe(30);
+    expect(mockNonDecision.confidence).toBe(40);
   });
 
   it('should handle CC vs TO addressing', async () => {

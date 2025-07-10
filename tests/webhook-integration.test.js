@@ -114,7 +114,7 @@ describe('Webhook Integration Tests', () => {
         choices: [{
           message: {
             content: JSON.stringify({
-              confidence: 30
+              confidence: 40
             })
           }
         }]
