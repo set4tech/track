@@ -57,7 +57,10 @@ export default async function handler(req, res) {
               if (res.ok && data.success) {
                 // Close popup and reload parent
                 if (window.opener) {
-                  window.close();
+                  // Notify parent window before closing
+                  window.opener.postMessage({ type: 'auth-success' }, '*');
+                  // Small delay to ensure message is sent
+                  setTimeout(() => window.close(), 100);
                 } else {
                   window.location.href = '/';
                 }
@@ -102,11 +105,18 @@ export default async function handler(req, res) {
     // Generate session token
     const { token } = generateSessionToken(user);
     
-    // Set session cookie
+    // Set session cookie with explicit domain for dev environments
+    const cookieOptions = {
+      ...AUTH_CONFIG.jwt.cookieOptions,
+      path: '/',
+      // Remove domain restriction for better compatibility
+      domain: undefined
+    };
+    
     res.setHeader('Set-Cookie', cookie.serialize(
       AUTH_CONFIG.jwt.cookieName,
       token,
-      AUTH_CONFIG.jwt.cookieOptions
+      cookieOptions
     ));
     
     return res.status(200).json({ 
