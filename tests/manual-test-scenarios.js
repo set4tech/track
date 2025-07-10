@@ -88,6 +88,34 @@ Also, if possible, please include decisions with deadlines in the next 30 days.
 
 Thanks!`,
     headers: 'Message-ID: <query-budget-001@company.com>\nDate: Mon, 15 Jan 2024 12:00:00 +0000'
+  },
+
+  // Test timezone display for different times
+  timezone_test: {
+    from: 'timezone-tester@company.com',
+    to: 'global-team@company.com',
+    cc: 'global-team@company.com, decisions@bot.set4.io',
+    subject: 'Global Team Meeting Time Decision',
+    text: `Team,
+
+After considering all time zones, I've made the following decision:
+
+DECISION: Our weekly global team meetings will be held every Tuesday at 15:00 UTC.
+
+This time works best for:
+- London: 3:00 PM (GMT/BST)
+- New York: 10:00 AM (EST/EDT)
+- Tokyo: 12:00 AM next day (JST)
+- Sydney: 1:00 AM next day (AEDT/AEST)
+
+Meeting details:
+- Platform: Zoom
+- Duration: 1 hour
+- Start date: February 1st, 2025
+- Recurring: Weekly
+
+Please adjust your calendars accordingly. The decision confirmation will show the time in your local timezone.`,
+    headers: `Message-ID: <timezone-test-${Date.now()}@company.com>\nDate: ${new Date().toUTCString()}`
   }
 };
 
