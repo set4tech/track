@@ -139,10 +139,12 @@ export default async function handler(req, res) {
       // Continue without tags if there's an error
     }
     
-    // Get total count of all decisions for display
-    const totalDecisionsResult = await sql`
-      SELECT COUNT(*) as total FROM decisions WHERE status = 'confirmed'
-    `;
+    // Get total count of user's decisions for display
+    const totalDecisionsResult = auth.authenticated ? await sql`
+      SELECT COUNT(*) as total FROM decisions 
+      WHERE status = 'confirmed'
+        AND (user_id = ${auth.user.id} OR created_by_email = ${auth.user.email} OR decision_maker = ${auth.user.email})
+    ` : await sql`SELECT 0 as total`;
     const totalDecisions = totalDecisionsResult.rows[0].total;
     
     const html = `
@@ -537,8 +539,8 @@ export default async function handler(req, res) {
             </div>
             <div id="activeFilters" style="margin-top: 10px; font-size: 14px; color: var(--muted-foreground);">
               ${tagIds.length === 0 ? 
-                `Showing all ${totalDecisions} decisions` : 
-                `Showing ${decisionsWithTags.length} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
+                `Showing all ${decisionsWithTags.length} decisions` : 
+                `Showing ${decisionsWithTags.length} of ${totalDecisions} decisions with ${filter_mode === 'all' ? 'all of' : 'any of'}: <strong>${tagIds.map(id => {
                   const tag = availableTags.find(t => t.id == id);
                   return tag ? tag.name : id;
                 }).join(', ')}</strong>`
@@ -924,7 +926,7 @@ export default async function handler(req, res) {
             if (!container) return;
             
             if (selectedTags.length === 0) {
-              container.innerHTML = 'Showing all ${totalDecisions} decisions';
+              container.innerHTML = 'Showing all ${decisionsWithTags.length} decisions';
             } else {
               const tagNames = selectedTags.map(id => {
                 const button = document.querySelector(\`.tag-filter[data-tag-id="\${id}"]\`);
@@ -933,7 +935,7 @@ export default async function handler(req, res) {
               
               const modeText = filterMode === 'all' ? 'all of' : 'any of';
               const currentCount = ${decisionsWithTags.length};
-              container.innerHTML = \`Showing \${currentCount} decisions with \${modeText}: <strong>\${tagNames.join(', ')}</strong>\`;
+              container.innerHTML = \`Showing \${currentCount} of ${totalDecisions} decisions with \${modeText}: <strong>\${tagNames.join(', ')}</strong>\`;
             }
           }
           
