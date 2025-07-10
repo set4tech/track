@@ -181,6 +181,41 @@ export default async function handler(req, res) {
             background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; 
             box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1); border: 1px solid var(--card-border);
           }
+          .cta-banner {
+            background: var(--muted);
+            color: var(--muted-foreground);
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid var(--border);
+          }
+          .cta-banner p {
+            margin: 0;
+          }
+          .help-button {
+            background: var(--muted);
+            border: 2px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--foreground);
+            font-weight: bold;
+            z-index: 10;
+            position: relative;
+          }
+          .help-button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.1);
+          }
           .stats { display: flex; gap: 20px; margin-top: 15px; }
           .stat { 
             background: var(--muted); padding: 10px 15px; border-radius: 8px; 
@@ -283,26 +318,42 @@ export default async function handler(req, res) {
           .witnesses { color: var(--muted-foreground); font-size: 14px; margin-top: 15px; }
           .empty { text-align: center; padding: 60px 20px; color: var(--muted-foreground); }
           .nav { text-align: center; margin-bottom: 20px; }
-          .thread-modal {
+          .thread-modal, .help-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,59,27,0.5); z-index: 1000; overflow-y: auto;
+            background: rgba(0,59,27,0.5); z-index: 10000; overflow-y: auto;
           }
-          .thread-content {
+          .thread-content, .help-content {
             background: var(--card-bg); margin: 20px auto; max-width: 800px; border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 204, 136, 0.15); position: relative;
             border: 1px solid var(--card-border);
           }
-          .thread-header {
+          .thread-header, .help-header {
             padding: 20px; border-bottom: 1px solid var(--border); background: var(--muted);
             border-radius: 12px 12px 0 0;
           }
-          .thread-body {
+          .thread-body, .help-body {
             padding: 20px; max-height: 60vh; overflow-y: auto;
           }
           .thread-email {
             background: var(--muted); padding: 15px; border-radius: 8px; margin: 10px 0;
             border-left: 4px solid var(--primary); font-family: monospace; white-space: pre-wrap;
             line-height: 1.4; border: 1px solid var(--border);
+          }
+          .help-section {
+            margin-bottom: 30px;
+          }
+          .help-section h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-family: 'Hedvig Letters Serif', serif;
+          }
+          .help-example {
+            background: var(--muted);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
           }
           .close-btn {
             position: absolute; top: 15px; right: 20px; background: none; border: none;
@@ -522,7 +573,7 @@ export default async function handler(req, res) {
             </button>
           </div>
           <div class="cta-banner">
-            <p><strong>📧 Send or CC ${config.inboundEmail}</strong> to get help with your paperwork</p>
+            <p>📧 Send or CC <strong>${config.inboundEmail}</strong> to get help with your paperwork</p>
           </div>
           ${!config.isProduction ? `
             <div style="background: #fff3cd; border: 1px solid #ffeebb; padding: 10px; margin: 10px 0; border-radius: 8px;">
@@ -661,12 +712,15 @@ export default async function handler(req, res) {
                   </div>
                 ` : ''}
                 
-                ${Object.keys(params).length > 0 ? `
-                  <div class="parameters">
-                    <strong>Parameters:</strong>
-                    ${Object.entries(params).map(([k,v]) => `<br>• <strong>${k}:</strong> ${v}`).join('')}
-                  </div>
-                ` : ''}
+                ${(() => {
+                  const nonNullParams = Object.entries(params).filter(([k, v]) => v !== null && v !== undefined && v !== '');
+                  return nonNullParams.length > 0 ? `
+                    <div class="parameters">
+                      <strong>Parameters:</strong>
+                      ${nonNullParams.map(([k,v]) => `<br>• <strong>${k}:</strong> ${v}`).join('')}
+                    </div>
+                  ` : '';
+                })()}
                 
                 <div class="witnesses">
                   <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
@@ -694,6 +748,93 @@ export default async function handler(req, res) {
             </div>
             <div class="thread-body">
               <div id="threadContent">Loading...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Help Modal -->
+        <div id="helpModal" class="help-modal">
+          <div class="help-content">
+            <button class="close-btn" onclick="closeHelp()">&times;</button>
+            <div class="help-header">
+              <h2 style="font-family: 'Hedvig Letters Serif', serif;">How Your AI Paperwork Assistant Works</h2>
+            </div>
+            <div class="help-body">
+              <div class="help-section">
+                <h3>📧 Making Decisions via Email</h3>
+                <p>Simply send or CC <strong>${config.inboundEmail}</strong> when you make a decision in an email conversation. Our AI will:</p>
+                <ul>
+                  <li>Automatically extract the decision from your email thread</li>
+                  <li>Identify key details like priority, deadline, and impact scope</li>
+                  <li>Send you a confirmation email to verify the decision</li>
+                  <li>Log it with all the relevant metadata and witnesses</li>
+                </ul>
+                
+                <div class="help-example">
+                  To: team@company.com<br>
+                  CC: ${config.inboundEmail}<br>
+                  Subject: Project Timeline Decision<br><br>
+                  After reviewing our options, we've decided to extend the project deadline by 2 weeks to ensure quality delivery.
+                </div>
+              </div>
+              
+              <div class="help-section">
+                <h3>🤖 What Gets Extracted</h3>
+                <p>Our AI automatically identifies and logs:</p>
+                <ul>
+                  <li><strong>Decision Summary</strong> - A clear statement of what was decided</li>
+                  <li><strong>Decision Maker</strong> - Who made the decision</li>
+                  <li><strong>Witnesses</strong> - Everyone included in the email thread</li>
+                  <li><strong>Priority Level</strong> - Critical, High, Medium, or Low</li>
+                  <li><strong>Impact Scope</strong> - Team, Department, or Organization-wide</li>
+                  <li><strong>Key Points</strong> - Important details and context</li>
+                  <li><strong>Deadlines</strong> - Any mentioned dates or timelines</li>
+                </ul>
+              </div>
+              
+              <div class="help-section">
+                <h3>✅ Confirmation Process</h3>
+                <p>After detecting a decision, we'll send you a confirmation email with:</p>
+                <ul>
+                  <li>A summary of the extracted decision</li>
+                  <li>All the identified metadata</li>
+                  <li>A simple "Confirm Decision" button</li>
+                  <li>Option to ignore if it's not actually a decision</li>
+                </ul>
+                <p>Only confirmed decisions are stored in your log.</p>
+              </div>
+              
+              <div class="help-section">
+                <h3>🔍 Viewing & Managing Decisions</h3>
+                <p>Once confirmed, your decisions appear in this dashboard where you can:</p>
+                <ul>
+                  <li>Search and filter by tags, priority, or date</li>
+                  <li>View full email threads for context</li>
+                  <li>Export decisions to PDF for documentation</li>
+                  <li>Track decision patterns and accountability</li>
+                </ul>
+              </div>
+              
+              <div class="help-section">
+                <h3>💡 Best Practices</h3>
+                <ul>
+                  <li>Be clear and explicit when stating decisions in emails</li>
+                  <li>Include relevant stakeholders in the CC field</li>
+                  <li>Mention deadlines and priorities when applicable</li>
+                  <li>Use phrases like "we decided", "the decision is", "we will proceed with"</li>
+                </ul>
+              </div>
+              
+              <div class="help-section">
+                <h3>🔒 Privacy & Security</h3>
+                <p>Your data is secure:</p>
+                <ul>
+                  <li>Only you can see your decisions</li>
+                  <li>Email content is encrypted in transit and at rest</li>
+                  <li>You can delete decisions at any time</li>
+                  <li>We never share your data with third parties</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -805,6 +946,22 @@ export default async function handler(req, res) {
           document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
               closeThread();
+              closeHelp();
+            }
+          });
+          
+          // Help modal functions
+          function showHelp() {
+            document.getElementById('helpModal').style.display = 'block';
+          }
+          
+          function closeHelp() {
+            document.getElementById('helpModal').style.display = 'none';
+          }
+          
+          document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+              closeHelp();
             }
           });
           
@@ -871,10 +1028,16 @@ export default async function handler(req, res) {
                     '<div class="section"><h3>Key Points</h3><ul>' + 
                     decision.parsed_context.key_points.map(function(point) { return '<li>' + point + '</li>'; }).join('') + 
                     '</ul></div>' : '') +
-                  (decision.parameters && Object.keys(decision.parameters).length > 0 ? 
-                    '<div class="section"><h3>Parameters</h3><div class="parameters">' +
-                    Object.entries(decision.parameters).map(function(entry) { return '<strong>' + entry[0] + ':</strong> ' + entry[1] + '<br>'; }).join('') +
-                    '</div></div>' : '') +
+                  (function() {
+                    if (!decision.parameters) return '';
+                    const nonNullParams = Object.entries(decision.parameters).filter(function(entry) {
+                      return entry[1] !== null && entry[1] !== undefined && entry[1] !== '';
+                    });
+                    return nonNullParams.length > 0 ? 
+                      '<div class="section"><h3>Parameters</h3><div class="parameters">' +
+                      nonNullParams.map(function(entry) { return '<strong>' + entry[0] + ':</strong> ' + entry[1] + '<br>'; }).join('') +
+                      '</div></div>' : '';
+                  })() +
                   '<div class="witnesses"><strong>Decision Maker:</strong> ' + decision.decision_maker + '<br>' +
                   (decision.witnesses && decision.witnesses.length > 0 ? '<strong>Witnesses:</strong> ' + decision.witnesses.join(', ') + '<br>' : '') +
                   '<strong>Confirmed:</strong> ' + new Date(decision.confirmed_at).toLocaleString() + '</div>' +
