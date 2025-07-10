@@ -337,23 +337,29 @@ export default async function handler(req, res) {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: #ef4444;
-            color: white;
+            background: none;
+            color: var(--muted-foreground);
             border: none;
-            padding: 4px 12px;
-            border-radius: 6px;
+            padding: 4px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 16px;
+            font-weight: normal;
             opacity: 0;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           .decision:hover .remove-button {
-            opacity: 1;
+            opacity: 0.7;
           }
           .remove-button:hover {
-            background: #dc2626;
-            transform: scale(1.05);
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.1);
           }
           .export-dropdown {
             position: absolute;
@@ -616,7 +622,7 @@ export default async function handler(req, res) {
           
           return `
             <div class="decision" data-id="${decision.id}">
-              <button class="remove-button" onclick="event.stopPropagation(); removeDecision(${decision.id})" title="Remove decision">Delete</button>
+              <button class="remove-button" onclick="event.stopPropagation(); removeDecision(${decision.id})" title="Remove decision">−</button>
               <h3>${decision.decision_summary}</h3>
               <div class="decision-maker">
                 <strong>${decision.decision_maker}</strong>
