@@ -398,6 +398,36 @@ export default async function handler(req, res) {
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 204, 136, 0.1);
             border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+          }
+          .filter-section.minimized {
+            background: transparent;
+            padding: 0;
+            box-shadow: none;
+            border: none;
+            margin-bottom: 10px;
+          }
+          .filter-section.minimized .filter-header {
+            background: rgba(0, 204, 136, 0.05);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            margin-bottom: 0;
+            border: 1px solid rgba(0, 204, 136, 0.2);
+            font-size: 14px;
+            transition: all 0.2s;
+          }
+          .filter-section.minimized .filter-header:hover {
+            background: rgba(0, 204, 136, 0.15);
+            border-color: rgba(0, 204, 136, 0.4);
+          }
+          .filter-section.minimized .filter-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin: 0;
+          }
+          .filter-section.minimized .filter-toggle {
+            font-size: 14px !important;
           }
           .filter-title {
             font-weight: 600;
@@ -511,9 +541,9 @@ export default async function handler(req, res) {
         </div>
         
         ${auth.authenticated && availableTags.length > 0 ? `
-          <div class="filter-section">
+          <div class="filter-section minimized" id="filterSection">
             <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: pointer;" onclick="toggleFilters()">
-              <div class="filter-title">Filters</div>
+              <div class="filter-title">Filters ${tagIds.length > 0 ? `(${tagIds.length})` : ''}</div>
               <div class="filter-toggle" id="filterToggle" style="font-size: 18px; transition: transform 0.2s;">▼</div>
             </div>
             <div class="filter-content" id="filterContent" style="display: none;">
@@ -956,13 +986,16 @@ export default async function handler(req, res) {
           function toggleFilters() {
             const content = document.getElementById('filterContent');
             const toggle = document.getElementById('filterToggle');
+            const section = document.getElementById('filterSection');
             
             if (content.style.display === 'none') {
               content.style.display = 'block';
               toggle.style.transform = 'rotate(180deg)';
+              section.classList.remove('minimized');
             } else {
               content.style.display = 'none';
               toggle.style.transform = 'rotate(0deg)';
+              section.classList.add('minimized');
             }
           }
 
