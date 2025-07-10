@@ -2,7 +2,7 @@ import { sql } from '../lib/database.js';
 import { getConfig } from '../lib/config.js';
 import { getTagsForDecision } from '../lib/tag-extractor.js';
 import { requireAuth } from '../lib/auth.js';
-import { generateAuthHTML, generateUserMenuHTML } from '../lib/auth-ui.js';
+import { generateAuthHTML, generateUserMenuHTML, generateIntegratedAuthHTML } from '../lib/auth-ui.js';
 import { generateCSRFToken } from '../lib/auth.js';
 import cookie from 'cookie';
 
@@ -563,14 +563,15 @@ export default async function handler(req, res) {
         </style>
       </head>
       <body>
-        ${auth.authenticated ? generateUserMenuHTML(auth.user) : generateAuthHTML(csrfToken)}
-        
         <div class="header">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h1>Your AI Paperwork Assistant ${config.isProduction ? '' : `(${config.environment})`}</h1>
-            <button class="help-button" onclick="showHelp()" title="How it works">
-              <span style="font-size: 20px;">?</span>
-            </button>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              ${generateIntegratedAuthHTML(auth.authenticated ? auth.user : null, csrfToken)}
+              <button class="help-button" onclick="showHelp()" title="How it works">
+                <span style="font-size: 20px;">?</span>
+              </button>
+            </div>
           </div>
           <div class="cta-banner">
             <p>📧 Send or CC <strong>${config.inboundEmail}</strong> to get help with your paperwork</p>
@@ -1213,6 +1214,9 @@ export default async function handler(req, res) {
           document.addEventListener('DOMContentLoaded', initializeFilters);
           
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> dev
 
           // Toggle filters visibility
           function toggleFilters() {
@@ -1231,8 +1235,11 @@ export default async function handler(req, res) {
             }
           }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 9197b91 (fix: tz)
+=======
+>>>>>>> dev
           // Convert all dates to user's local timezone
           document.addEventListener('DOMContentLoaded', function() {
             // Convert date-only fields
