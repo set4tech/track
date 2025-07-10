@@ -7,6 +7,7 @@
     "test:unit": "node tests/run-tests.js",
     "test:integration": "node tests/integration-test.js",
     "test:manual": "node tests/manual-test-scenarios.js",
+    "test:timezone": "node tests/timezone-simple-test.js",
     "test:setup": "chmod +x tests/run-tests.sh",
     "seed": "node scripts/seed-db.js",
     "db:start": "node scripts/local-db.js start",

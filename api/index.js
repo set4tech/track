@@ -608,12 +608,12 @@ export default async function handler(req, res) {
                 </button>
                 
                 <div class="meta">
-                  <span>📅 ${new Date(decision.decision_date).toLocaleDateString()}</span>
+                  <span>📅 <span class="date-field" data-date="${decision.decision_date}">${new Date(decision.decision_date).toLocaleDateString()}</span></span>
                   <span>🏷️ ${decision.topic}</span>
                   <span>📊 ${decision.decision_type}</span>
                   <span class="priority-${decision.priority}">⚡ ${decision.priority}</span>
                   <span>🎯 ${decision.impact_scope}</span>
-                  ${decision.deadline ? `<span>⏰ ${new Date(decision.deadline).toLocaleDateString()}</span>` : ''}
+                  ${decision.deadline ? `<span>⏰ <span class="date-field" data-date="${decision.deadline}">${new Date(decision.deadline).toLocaleDateString()}</span></span>` : ''}
                 </div>
                 
                 ${parsedContext.key_points && parsedContext.key_points.length > 0 ? `
@@ -635,7 +635,7 @@ export default async function handler(req, res) {
                 <div class="witnesses">
                   <strong>Decision Maker:</strong> ${decision.decision_maker}<br>
                   ${witnesses.length > 0 ? `<strong>Witnesses:</strong> ${witnesses.join(', ')}` : 'No witnesses'}
-                  <br><small>Confirmed: ${new Date(decision.confirmed_at).toLocaleString()}</small>
+                  <br><small>Confirmed: <span class="datetime-field" data-date="${decision.confirmed_at}">${new Date(decision.confirmed_at).toLocaleString()}</span></small>
                   ${decision.raw_thread ? '<button class="view-thread-btn" onclick="event.stopPropagation(); showThread(' + decision.id + ')">📧 View Email Thread</button>' : ''}
                 </div>
               </div>
@@ -734,7 +734,7 @@ export default async function handler(req, res) {
                 title.textContent = decision.decision_summary;
                 meta.innerHTML = '<div style="color: var(--muted-foreground); font-size: 14px; margin-top: 10px;">' +
                   '<strong>From:</strong> ' + decision.decision_maker + '<br>' +
-                  '<strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleString() + '<br>' +
+                  '<strong>Date:</strong> <span class="datetime-field" data-date="' + decision.decision_date + '">' + new Date(decision.decision_date).toLocaleString() + '</span><br>' +
                   '<strong>Topic:</strong> ' + decision.topic + ' | <strong>Type:</strong> ' + decision.decision_type + '<br>' +
                   '<strong>Priority:</strong> ' + decision.priority + ' | <strong>Impact:</strong> ' + decision.impact_scope +
                   '</div>';
@@ -826,10 +826,10 @@ export default async function handler(req, res) {
                   '.parameters { background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #00CC88; }' +
                   '.witnesses { color: #16a34a; margin-top: 20px; } @media print { body { padding: 0; } }</style>' +
                   '</head><body><h1>' + decision.decision_summary + '</h1>' +
-                  '<div class="meta"><strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleDateString() + '<br>' +
+                  '<div class="meta"><strong>Date:</strong> ' + new Date(decision.decision_date).toLocaleString() + '<br>' +
                   '<strong>Topic:</strong> ' + decision.topic + '<br><strong>Type:</strong> ' + decision.decision_type + '<br>' +
                   '<strong>Priority:</strong> ' + decision.priority + '<br><strong>Impact Scope:</strong> ' + decision.impact_scope + '<br>' +
-                  (decision.deadline ? '<strong>Deadline:</strong> ' + new Date(decision.deadline).toLocaleDateString() + '<br>' : '') +
+                  (decision.deadline ? '<strong>Deadline:</strong> ' + new Date(decision.deadline).toLocaleString() + '<br>' : '') +
                   '</div>' +
                   (decision.parsed_context && decision.parsed_context.key_points ? 
                     '<div class="section"><h3>Key Points</h3><ul>' + 
@@ -951,6 +951,7 @@ export default async function handler(req, res) {
           // Initialize on page load
           document.addEventListener('DOMContentLoaded', initializeFilters);
           
+
           // Toggle filters visibility
           function toggleFilters() {
             const content = document.getElementById('filterContent');
@@ -964,6 +965,28 @@ export default async function handler(req, res) {
               toggle.style.transform = 'rotate(0deg)';
             }
           }
+
+          // Convert all dates to user's local timezone
+          document.addEventListener('DOMContentLoaded', function() {
+            // Convert date-only fields
+            document.querySelectorAll('.date-field').forEach(function(element) {
+              const utcDate = element.getAttribute('data-date');
+              if (utcDate) {
+                const localDate = new Date(utcDate).toLocaleDateString();
+                element.textContent = localDate;
+              }
+            });
+            
+            // Convert date-time fields
+            document.querySelectorAll('.datetime-field').forEach(function(element) {
+              const utcDate = element.getAttribute('data-date');
+              if (utcDate) {
+                const localDateTime = new Date(utcDate).toLocaleString();
+                element.textContent = localDateTime;
+              }
+            });
+          });
+
         </script>
       </body>
       </html>

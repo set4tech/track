@@ -81,13 +81,25 @@ export default async function handler(req, res) {
           <p><strong>Type:</strong> ${decision.decision_type}</p>
           <p><strong>Priority:</strong> ${decision.priority}</p>
           <p><strong>Impact:</strong> ${decision.impact_scope}</p>
-          <p><strong>Confirmed at:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Confirmed at:</strong> <span id="confirmed-time">${new Date().toISOString()}</span></p>
         </div>
         
         <p>This decision has been added to your decision log.</p>
         <div style="text-align: center;">
           <a href="/api/index" class="button">📋 View All Decisions</a>
         </div>
+        
+        <script>
+          // Convert UTC timestamp to user's local timezone
+          document.addEventListener('DOMContentLoaded', function() {
+            const timeElement = document.getElementById('confirmed-time');
+            if (timeElement) {
+              const utcTime = timeElement.textContent;
+              const localTime = new Date(utcTime).toLocaleString();
+              timeElement.textContent = localTime;
+            }
+          });
+        </script>
       </body>
       </html>
     `);
