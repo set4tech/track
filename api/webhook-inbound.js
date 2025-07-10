@@ -159,16 +159,22 @@ export default async function handler(req, res) {
         model: "gpt-4o-mini", // Use faster model for quicker response
         messages: [{
           role: "system",
-          content: `Extract decision information from email threads. Decisions can be expressed in various ways:
+          content: `Extract decision information from email threads. IMPORTANT: Since the decision bot has been explicitly CC'd, we should assume a decision has been made or is being documented. Be liberal in what you consider a decision.
 
-- Direct statements: "We will proceed with X", "I decide to do Y", "Let's go with option Z"
-- Confirmations: "Yes, confirmed", "Agreed", "That works", "Sounds good", "Let's do it"
-- Approvals: "Approved", "Go ahead", "Green light", "You have my approval"
-- Commitments: "I'll handle this", "We're committed to X", "Count me in"
-- Selections: "I choose A", "We'll go with B", "Option C is best"
-- Authorizations: "You're authorized to proceed", "Permission granted"
+Examples of decisions include:
+- Any statement of intent or action: "We will...", "I'll...", "Let's..."
+- Confirmations: "Yes", "Agreed", "Sounds good", "OK", "Sure", "Let's do it"
+- Approvals: "Approved", "Go ahead", "Looks good", "LGTM", "+1"
+- Commitments: "I'll handle this", "On it", "Will do"
+- Selections: "I prefer A", "B works for me", "Let's try C"
+- Updates: "FYI we decided...", "Just to confirm...", "Following up on..."
+- Plans: "The plan is...", "Next steps are...", "We should..."
+- Conclusions: "So we're going with...", "To summarize...", "Final decision:"
 
-Pay special attention to conversational context - a simple "yes" in response to "Should we do X?" is a decision.
+Even simple responses in context are decisions. For example:
+- "When should we meet?" → "Tuesday" is a decision
+- "Should we proceed?" → "Yes" is a decision
+- "Thoughts?" → "I like option A" is a decision
 
 Return JSON with:
             - decision_summary: Clear, concise statement of what was decided (max 200 chars)
@@ -186,10 +192,10 @@ Return JSON with:
             - decision_type: technical/budget/timeline/personnel/strategic/operational
             - deadline: If mentioned (ISO format)
             - impact_scope: team/department/company/external
-            - confidence: 0-100 score of how confident you are this is a decision
+            - confidence: 0-100 score (aim for 80+ unless clearly not a decision)
             - key_points: Array of 3-5 bullet points explaining the decision
             
-            Only extract if confidence > 70. Return null if no clear decision found.`
+            Since the bot was CC'd intentionally, default to extracting a decision unless the email is clearly just informational with no actionable content.`
         }, {
           role: "user", 
           content: `Email thread:\nFrom: ${from}\nTo: ${to}\nCC: ${cc}\nSubject: ${subject}\n\n${text}`
@@ -201,7 +207,7 @@ Return JSON with:
       console.log(`[${Date.now() - startTime}ms] OpenAI decision extraction completed`);
       console.log('OpenAI parsed result:', parsed);
       
-      if (!parsed || parsed.confidence < 70) {
+      if (!parsed || parsed.confidence < 50) {
         console.log('Decision rejected - confidence too low:', parsed?.confidence);
         clearTimeout(timeoutWarning);
         return res.status(200).json({ status: 'no_decision_found', confidence: parsed?.confidence });
