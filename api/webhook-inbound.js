@@ -175,13 +175,19 @@ Return JSON with:
         return res.status(200).json({ status: 'no_decision_found', confidence: parsed?.confidence });
       }
       
+      // Check if decision maker has a user account
+      const userResult = await sql`
+        SELECT id FROM users WHERE email = ${parsed.decision_maker || from}
+      `;
+      const userId = userResult.rows.length > 0 ? userResult.rows[0].id : null;
+      
       // Store decision (automatically confirmed)
       await sql`
         INSERT INTO decisions (
           message_id, thread_id, decision_summary, decision_maker, witnesses,
           decision_date, topic, parameters, priority, decision_type,
           status, deadline, impact_scope, raw_thread, parsed_context,
-          confirmed_at
+          confirmed_at, user_id, created_by_email
         ) VALUES (
           ${messageId}, ${threadId}, ${parsed.decision_summary}, 
           ${parsed.decision_maker || from}, ${uniqueEmails.filter(e => e !== from)},
@@ -189,7 +195,7 @@ Return JSON with:
           ${JSON.stringify(parsed.parameters)}, ${parsed.priority}, 
           ${parsed.decision_type}, 'confirmed', ${parsed.deadline}, 
           ${parsed.impact_scope}, ${text}, ${JSON.stringify(parsed)},
-          ${new Date()}
+          ${new Date()}, ${userId}, ${parsed.decision_maker || from}
         )
       `;
       
