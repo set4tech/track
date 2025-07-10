@@ -8,11 +8,14 @@ import cookie from 'cookie';
 
 export default async function handler(req, res) {
   try {
+    console.log('Starting index handler...');
     const { team_id, tags, filter_mode = 'any' } = req.query;
     const config = getConfig();
+    console.log('Config loaded:', config.environment);
     
     // Check authentication
     const auth = await requireAuth(req, res);
+    console.log('Auth check complete:', auth.authenticated);
     
     // Generate CSRF token for auth forms
     const csrfToken = generateCSRFToken();
@@ -946,6 +949,10 @@ export default async function handler(req, res) {
     res.status(200).send(html);
   } catch (error) {
     console.error('UI error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+    });
   }
 }
