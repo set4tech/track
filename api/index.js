@@ -103,30 +103,38 @@ export default async function handler(req, res) {
     }
     
     // Fetch tags for each decision
-    const decisionsWithTags = await Promise.all(
-      rows.map(async (decision) => {
-        const tags = await getTagsForDecision(decision.id);
-        return {
-          ...decision,
-          tags
-        };
-      })
-    );
+    let decisionsWithTags = rows;
+    let availableTags = [];
     
-    // Get all available tags for the filter
-    const allTagsResult = await sql`
-      SELECT 
-        t.id, 
-        t.name, 
-        t.description, 
-        COUNT(DISTINCT dt.decision_id) as decision_count
-      FROM tags t
-      LEFT JOIN decision_tags dt ON t.id = dt.tag_id
-      GROUP BY t.id, t.name, t.description
-      HAVING COUNT(DISTINCT dt.decision_id) > 0
-      ORDER BY decision_count DESC, t.name ASC
-    `;
-    const availableTags = allTagsResult.rows;
+    try {
+      decisionsWithTags = await Promise.all(
+        rows.map(async (decision) => {
+          const tags = await getTagsForDecision(decision.id);
+          return {
+            ...decision,
+            tags
+          };
+        })
+      );
+      
+      // Get all available tags for the filter
+      const allTagsResult = await sql`
+        SELECT 
+          t.id, 
+          t.name, 
+          t.description, 
+          COUNT(DISTINCT dt.decision_id) as decision_count
+        FROM tags t
+        LEFT JOIN decision_tags dt ON t.id = dt.tag_id
+        GROUP BY t.id, t.name, t.description
+        HAVING COUNT(DISTINCT dt.decision_id) > 0
+        ORDER BY decision_count DESC, t.name ASC
+      `;
+      availableTags = allTagsResult.rows;
+    } catch (tagError) {
+      console.error('Error fetching tags:', tagError);
+      // Continue without tags if there's an error
+    }
     
     // Get total count of all decisions for display
     const totalDecisionsResult = await sql`
