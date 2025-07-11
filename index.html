@@ -26,7 +26,7 @@
 html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:'Space Mono',monospace;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 
 a{color:inherit;text-decoration:none}
-a:focus-visible{outline:2px dashed var(--orange);outline-offset:2px}
+a:focus-visible{outline:2px dashed var(--green);outline-offset:2px}
 
 h1,h2,h3{font-family:'Hedvig Letters Serif',serif;margin:0;font-weight:400}
 
@@ -50,19 +50,25 @@ header{
 .btn{
   background:var(--fg);color:var(--bg);
   padding:.9rem 1.8rem;font-weight:700;border:4px solid var(--fg);
-  transition:transform .15s ease-in-out
+  transition:transform .15s ease-in-out;
+  display:inline-flex;align-items:center;
+}
+.btn.primary{
+  padding:1.2rem 2.4rem;font-size:1.1rem;
 }
 .btn.alt{
   background:var(--bg);color:var(--fg);
+  padding:.8rem 1.4rem;font-size:.95rem;
 }
-.btn:hover,.btn:focus-visible{transform:translateY(-4px)}
-.btn.alt:hover,.btn.alt:focus-visible{background:var(--fg);color:var(--bg)}
+.btn:hover,.btn:focus-visible{background:var(--green);color:var(--bg);border-color:var(--green);transform:translateY(-4px)}
+.btn.alt:hover,.btn.alt:focus-visible{background:var(--green);color:var(--bg);border-color:var(--green)}
 
 section.band{
   border-top:4px solid var(--fg);border-bottom:4px solid var(--fg);
   display:flex;flex-wrap:wrap;align-items:center;
+  padding:0 20px;
 }
-section.band:nth-of-type(even){background:var(--fg);color:var(--bg)}
+section.band:nth-of-type(even){background:var(--dark-green);color:var(--bg)}
 section.band:nth-of-type(even) .band-inner{flex-direction:row-reverse}
 .band-inner{display:flex;gap:3rem;flex-wrap:wrap;align-items:center;width:100%;padding:5rem 0}
 .band-text{flex:1 1 320px}
@@ -72,7 +78,7 @@ section.band:nth-of-type(even) .band-inner{flex-direction:row-reverse}
   font-size:clamp(4rem,10vw,8rem);
   flex:0 0 auto;
   font-weight:700;
-  color:var(--orange);
+  color:var(--green);
   line-height:1
 }
 
@@ -89,11 +95,23 @@ footer a:hover{border-color:var(--bg)}
 
 <header>
   <div class="wrapper">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+      <img src="/set4-logo.svg" alt="Set4" style="height: 50px; width: auto;">
+      <span style="font-size: 24px; color: var(--green); font-weight: 700;">track</span>
+    </div>
     <h1 class="tagline">Decision&nbsp;Tracker</h1>
     <p class="sub">Automatic detection, confirmation and recall of every decision your team makes.</p>
     <div class="cta-group">
-      <a href="/api/slack-install-page" class="btn">Add&nbsp;to&nbsp;Slack</a>
-      <a href="/api/index" class="btn alt">View&nbsp;Demo</a>
+      <a href="/api/index" class="btn primary">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18L12.048 13.562c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        Sign&nbsp;In&nbsp;with&nbsp;Google
+      </a>
+      <a href="/api/slack-install-page" class="btn alt">Add&nbsp;to&nbsp;Slack</a>
     </div>
   </div>
 </header>
@@ -105,7 +123,7 @@ footer a:hover{border-color:var(--bg)}
     <div class="band-num">01</div>
     <div class="band-text">
       <h2>Zero‑friction capture</h2>
-      <p>Natural‑language parsing sweeps Slack and email for phrasing that implies commitment. Decisions surface without forms, hashtags or bot commands.</p>
+      <p>Simply CC decisions@bot.set4.io on any email. AI extracts the decision automatically. No forms, no special commands, just natural workflow.</p>
     </div>
   </div>
 </section>
@@ -115,7 +133,7 @@ footer a:hover{border-color:var(--bg)}
     <div class="band-num">02</div>
     <div class="band-text">
       <h2>Human‑in‑the‑loop guardrails</h2>
-      <p>Before anything is logged the decider confirms it in a private thread. One click prevents false positives and noisy archives.</p>
+      <p>Before logging any decision, we send a confirmation email to the decision maker. One click to confirm prevents false positives.</p>
     </div>
   </div>
 </section>
@@ -124,8 +142,8 @@ footer a:hover{border-color:var(--bg)}
   <div class="wrapper band-inner">
     <div class="band-num">03</div>
     <div class="band-text">
-      <h2>Search like code grep</h2>
-      <p>Slash‑commands and a minimal web UI return results instantly, scoped by author, date, repository or keyword so you never repeat a debate.</p>
+      <h2>Smart tagging and filtering</h2>
+      <p>Organize decisions with custom tags and filter by priority, date, or decision maker. Find exactly what you need through a clean web interface.</p>
     </div>
   </div>
 </section>
@@ -135,7 +153,7 @@ footer a:hover{border-color:var(--bg)}
     <div class="band-num">04</div>
     <div class="band-text">
       <h2>Workspace isolation</h2>
-      <p>Each team's data stays within its boundaries. No cross‑tenant storage. No training on your payloads. SOC‑2 attested.</p>
+      <p>Each team's data stays within its boundaries. No cross‑tenant storage. No training on your payloads. Built with security first.</p>
     </div>
   </div>
 </section>
