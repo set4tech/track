@@ -289,8 +289,10 @@ View all decisions: https://track-sigma-nine.vercel.app/api/decisions-ui`
         parsed_context: JSON.stringify(parsed)
       };
       
-      // Start tag extraction but don't wait for it
-      extractTagsInBackground(decisionId, decisionData, startTime);
+      // Extract tags synchronously to ensure completion in serverless environment
+      console.log('Starting tag extraction...');
+      await extractTagsInBackground(decisionId, decisionData, startTime);
+      console.log('Tag extraction completed.');
       
       console.log(`[${Date.now() - startTime}ms] Total webhook processing time (excluding background tasks)`);
       clearTimeout(timeoutWarning);
