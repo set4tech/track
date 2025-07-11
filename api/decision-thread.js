@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const { id } = req.query;
-    
+
     if (!id) {
       return res.status(400).json({ error: 'Decision ID is required' });
     }
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const result = await sql`
       SELECT id, decision_summary, decision_maker, witnesses, decision_date, 
              topic, parameters, priority, decision_type, deadline, impact_scope, 
-             raw_thread, parsed_context, confirmed_at
+             raw_thread, parsed_context, confirmed_at, thread_id
       FROM decisions 
       WHERE id = ${id} AND status = 'confirmed'
     `;
@@ -25,19 +25,39 @@ export default async function handler(req, res) {
     }
 
     const decision = result.rows[0];
-    
+
+    // Get related decisions in the same thread
+    let relatedDecisions = [];
+    if (decision.thread_id) {
+      const relatedResult = await sql`
+        SELECT id, decision_summary, decision_maker, decision_date, priority, decision_type
+        FROM decisions 
+        WHERE thread_id = ${decision.thread_id} 
+          AND status = 'confirmed'
+          AND id != ${id}
+        ORDER BY decision_date ASC
+      `;
+      relatedDecisions = relatedResult.rows;
+    }
+
     // Parse the stored JSON fields with better error handling
     let params = {};
     let parsedContext = {};
     try {
-      params = typeof decision.parameters === 'string' ? JSON.parse(decision.parameters) : decision.parameters || {};
+      params =
+        typeof decision.parameters === 'string'
+          ? JSON.parse(decision.parameters)
+          : decision.parameters || {};
     } catch (e) {
       console.error('Parameters JSON parse error:', e);
       params = {};
     }
-    
+
     try {
-      parsedContext = typeof decision.parsed_context === 'string' ? JSON.parse(decision.parsed_context) : decision.parsed_context || {};
+      parsedContext =
+        typeof decision.parsed_context === 'string'
+          ? JSON.parse(decision.parsed_context)
+          : decision.parsed_context || {};
     } catch (e) {
       console.error('Parsed context JSON parse error:', e);
       parsedContext = {};
@@ -46,7 +66,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       ...decision,
       parameters: params,
-      parsed_context: parsedContext
+      parsed_context: parsedContext,
+      relatedDecisions,
     });
   } catch (error) {
     console.error('Thread fetch error:', error);
