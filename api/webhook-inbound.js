@@ -107,8 +107,12 @@ export default async function handler(req, res) {
     
     // Parse headers
     const headerObj = extractEmailHeaders(headers);
-    const messageId = headerObj['Message-ID'] || crypto.randomBytes(16).toString('hex');
-    const threadId = headerObj['References'] || headerObj['In-Reply-To'] || messageId;
+    const rawMessageId = headerObj['Message-ID'] || crypto.randomBytes(16).toString('hex');
+    const rawThreadId = headerObj['References'] || headerObj['In-Reply-To'] || rawMessageId;
+    
+    // Ensure IDs fit within VARCHAR(255) limit
+    const messageId = rawMessageId.length > 255 ? rawMessageId.substring(0, 255) : rawMessageId;
+    const threadId = rawThreadId.length > 255 ? rawThreadId.substring(0, 255) : rawThreadId;
     
     // Check if bot is included (either CC or TO)
     const botDomain = '@bot.set4.io';
@@ -206,6 +210,14 @@ Return JSON with:
       const parsed = JSON.parse(completion.choices[0].message.content);
       console.log(`[${Date.now() - startTime}ms] OpenAI decision extraction completed`);
       console.log('OpenAI parsed result:', parsed);
+      
+      // Ensure fields fit within VARCHAR(255) limits
+      if (parsed.topic && parsed.topic.length > 255) {
+        parsed.topic = parsed.topic.substring(0, 255);
+      }
+      if (parsed.decision_maker && parsed.decision_maker.length > 255) {
+        parsed.decision_maker = parsed.decision_maker.substring(0, 255);
+      }
       
       if (!parsed || parsed.confidence < 50) {
         console.log('Decision rejected - confidence too low:', parsed?.confidence);
