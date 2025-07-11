@@ -1,0 +1,17 @@
+{
+  "description": "Template configuration for this project. See https://www.codebuff.com/config for all options.",
+  "startupProcesses": [
+    {
+      "name": "database",
+      "command": "npm run db:start",
+      "stdoutFile": "logs/database.log"
+    }
+  ],
+  "fileChangeHooks": [
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "filePattern": "**/*.js"
+    }
+  ]
+}
