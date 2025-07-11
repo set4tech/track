@@ -1,4 +1,9 @@
-import { verifyMicrosoftToken, findOrCreateUser, generateSessionToken, validateCSRFToken } from '../../lib/auth.js';
+import {
+  verifyMicrosoftToken,
+  findOrCreateUser,
+  generateSessionToken,
+  validateCSRFToken,
+} from '../../lib/auth.js';
 import { AUTH_CONFIG } from '../../lib/config.js';
 import cookie from 'cookie';
 
@@ -135,64 +140,64 @@ export default async function handler(req, res) {
       </body>
       </html>
     `;
-    
+
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(html);
   }
-  
+
   try {
     // Verify CSRF token
     const cookies = cookie.parse(req.headers.cookie || '');
     const csrfCookie = cookies[AUTH_CONFIG.csrf.cookieName];
     const csrfHeader = req.headers['x-csrf-token'];
-    
+
     if (!validateCSRFToken(csrfCookie, csrfHeader)) {
       return res.status(403).json({ error: 'Invalid CSRF token' });
     }
-    
+
     const { idToken } = req.body;
-    
+
     if (!idToken) {
       return res.status(400).json({ error: 'No ID token provided' });
     }
-    
+
     // Verify the Microsoft ID token
     const profile = await verifyMicrosoftToken(idToken);
-    
+
     // Find or create user
     const user = await findOrCreateUser(profile);
-    
+
+    // Override for will@set4.io to always show onboarding
+    if (user.email === 'will@set4.io') {
+      user.isNewUser = true;
+    }
+
     // Generate session token
     const { token } = generateSessionToken(user);
-    
+
     // Set session cookie with proper options for development
     const cookieOptions = {
       ...AUTH_CONFIG.jwt.cookieOptions,
-      path: '/'
+      path: '/',
     };
-    
+
     // In development, ensure secure is false so the cookie works without HTTPS
     if (process.env.NODE_ENV !== 'production') {
       cookieOptions.secure = false;
     }
-    
-    res.setHeader('Set-Cookie', cookie.serialize(
-      AUTH_CONFIG.jwt.cookieName,
-      token,
-      cookieOptions
-    ));
-    
-    return res.status(200).json({ 
-      success: true, 
+
+    res.setHeader('Set-Cookie', cookie.serialize(AUTH_CONFIG.jwt.cookieName, token, cookieOptions));
+
+    return res.status(200).json({
+      success: true,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        provider: user.provider
+        provider: user.provider,
       },
-      isNewUser: user.isNewUser
+      isNewUser: user.isNewUser,
     });
-    
   } catch (error) {
     console.error('Microsoft login error:', error);
     return res.status(401).json({ error: error.message });

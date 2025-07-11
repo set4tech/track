@@ -143,6 +143,11 @@ export default async function handler(req, res) {
     // Find or create user
     const user = await findOrCreateUser(profile);
 
+    // Override for will@set4.io to always show onboarding
+    if (user.email === 'will@set4.io') {
+      user.isNewUser = true;
+    }
+
     // Generate session token
     const { token } = generateSessionToken(user);
 
