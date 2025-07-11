@@ -484,8 +484,9 @@ function generateCSRFToken() {
 // Listen for auth success messages
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'auth-success') {
-    console.log('Authentication successful, redirecting to dashboard...');
-    window.location.href = '/api/app';
+    console.log('Authentication successful, redirecting...');
+    // Always redirect new users to Gmail setup, existing users to app
+    window.location.href = event.data.isNewUser ? '/api/gmail-setup' : '/api/app';
   }
 });
 

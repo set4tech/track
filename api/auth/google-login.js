@@ -99,11 +99,11 @@ export default async function handler(req, res) {
                 // Close popup and reload parent
                 if (window.opener) {
                   // Notify parent window before closing
-                  window.opener.postMessage({ type: 'auth-success' }, '*');
+                  window.opener.postMessage({ type: 'auth-success', isNewUser: data.isNewUser }, '*');
                   // Small delay to ensure message is sent
                   setTimeout(() => window.close(), 100);
                 } else {
-                  window.location.href = '/';
+                  window.location.href = data.isNewUser ? '/api/gmail-setup' : '/api/app';
                 }
               } else {
                 alert('Login failed: ' + (data.error || 'Unknown error'));
@@ -169,6 +169,7 @@ export default async function handler(req, res) {
         name: user.name,
         provider: user.provider,
       },
+      isNewUser: user.isNewUser,
     });
   } catch (error) {
     console.error('Google login error:', error);

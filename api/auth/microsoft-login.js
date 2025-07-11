@@ -106,9 +106,10 @@ export default async function handler(req, res) {
                 if (res.ok && data.success) {
                   // Close popup and reload parent
                   if (window.opener) {
-                    window.close();
+                    window.opener.postMessage({ type: 'auth-success', isNewUser: data.isNewUser }, '*');
+                    setTimeout(() => window.close(), 100);
                   } else {
-                    window.location.href = '/';
+                    window.location.href = data.isNewUser ? '/api/gmail-setup' : '/api/app';
                   }
                 } else {
                   document.getElementById('error').textContent = 'Login failed: ' + (data.error || 'Unknown error');
@@ -188,7 +189,8 @@ export default async function handler(req, res) {
         email: user.email,
         name: user.name,
         provider: user.provider
-      }
+      },
+      isNewUser: user.isNewUser
     });
     
   } catch (error) {

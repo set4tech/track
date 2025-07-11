@@ -41,7 +41,7 @@ function getAvailableTagsFromDecisions(decisionsWithTags) {
 export default async function handler(req, res) {
   try {
     console.log('Starting app handler...');
-    const { team_id, tags, filter_mode = 'any', priority } = req.query;
+    const { team_id, tags, filter_mode = 'any', priority, gmail_syncing } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
     // Check authentication
@@ -78,6 +78,7 @@ export default async function handler(req, res) {
       tagIds,
       filterMode: filter_mode,
       generateIntegratedAuthHTML,
+      gmailSyncing: gmail_syncing === 'true',
     });
     res.setHeader('Content-Type', 'text/html');
     res.status(200).send(html);

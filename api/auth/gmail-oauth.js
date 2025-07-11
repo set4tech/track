@@ -24,11 +24,22 @@ export default async function handler(req, res) {
       'https://www.googleapis.com/auth/userinfo.email'
     ];
 
+    // Check for sync parameters from the query string
+    const syncAfterAuth = req.query.sync_after_auth === 'true';
+    const syncPeriod = req.query.sync_period || 'month';
+    
+    // Include sync parameters in the state
+    const state = JSON.stringify({
+      userId: authContext.user.id.toString(),
+      syncAfterAuth,
+      syncPeriod
+    });
+    
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
       prompt: 'consent',
-      state: authContext.user.id.toString()
+      state: state
     });
 
     res.redirect(authUrl);
