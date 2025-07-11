@@ -92,9 +92,7 @@ h1, h2, h3 {
         <div class="container">
             <h1>📋 Decision Tracker</h1>
             <p>Automatically track and organize team decisions in Slack and email</p>
-            <a href="/api/slack-install-page" class="cta-button">
-                📱 Add to Slack
-            </a>
+
             <a href="/api/index" class="cta-button" style="background: rgba(255,255,255,0.2);">
                 🔍 View Demo
             </a>
@@ -204,7 +202,7 @@ h1, h2, h3 {
    - Gradient background (primary to tertiary)
    - Large emoji + title
    - Subtitle description
-   - Two CTA buttons (Add to Slack, View Demo)
+   - One CTA button (View Demo)
 
 2. **Features Section**
    - Light green background (#f0fdf4)
