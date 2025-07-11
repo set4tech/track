@@ -68,6 +68,17 @@ header{
   margin-top:1rem
 }
 
+.email-address{
+  color:var(--green);
+  font-weight:700;
+  cursor:pointer;
+  transition:color .2s;
+  position:relative;
+}
+.email-address:hover{
+  color:var(--orange);
+}
+
 .cta-group{margin-top:3rem;display:flex;gap:1rem;flex-wrap:wrap}
 .btn{
   background:var(--fg);color:var(--bg);
@@ -315,7 +326,7 @@ footer a:hover{border-color:var(--bg)}
       <span style="font-size: 36px; color: var(--green); font-family: 'Hedvig Letters Serif', serif; font-weight: 400;">track</span>
     </div>
     <h1 class="tagline">The email assistant that understands AEC</h1>
-    <p class="sub">CC me@bot.set4.io into your email chains to record decisions, store data, and execute administrative tasks.</p>
+    <p class="sub">CC <span class="email-address" onclick="copyEmailAddress(event)">me@bot.set4.io</span> into your email chains to record decisions, store data, and execute administrative tasks.</p>
     
     <!-- Animated email demo -->
     <div class="email-demo-container">
@@ -325,7 +336,7 @@ footer a:hover{border-color:var(--bg)}
       </div>
       <div class="email-field" style="background: #f0fdf4; margin: 0 -2rem; padding: 0.5rem 2rem;">
         <span class="email-label">CC:</span>
-        <span class="typing-text cc-text">decisions@bot.set4.io</span>
+        <span class="typing-text cc-text">me@bot.set4.io</span>
       </div>
       <div class="email-field">
         <span class="email-label">Subject:</span>
@@ -374,7 +385,7 @@ footer a:hover{border-color:var(--bg)}
     <div class="band-num">01</div>
     <div class="band-text">
       <h2>Zero‑friction capture</h2>
-      <p>Simply CC decisions@bot.set4.io on any email. AI extracts the decision automatically. No forms, no special commands, just natural workflow.</p>
+      <p>Simply CC me@bot.set4.io on any email. AI extracts the decision automatically. No forms, no special commands, just natural workflow.</p>
     </div>
   </div>
 </section>
@@ -471,7 +482,7 @@ function copyEmail(event) {
   const button = event.currentTarget;
   const tooltip = button.querySelector('.copy-tooltip');
   
-  navigator.clipboard.writeText('decisions@bot.set4.io').then(() => {
+  navigator.clipboard.writeText('me@bot.set4.io').then(() => {
     tooltip.classList.add('show');
     
     setTimeout(() => {
@@ -484,6 +495,30 @@ function copyEmail(event) {
     setTimeout(() => {
       tooltip.classList.remove('show');
     }, 2000);
+  });
+}
+
+function copyEmailAddress(event) {
+  event.preventDefault();
+  
+  const emailSpan = event.currentTarget;
+  const email = emailSpan.textContent;
+  
+  navigator.clipboard.writeText(email).then(() => {
+    // Store original text
+    const originalText = emailSpan.textContent;
+    
+    // Change to "Copied!"
+    emailSpan.textContent = 'Copied!';
+    emailSpan.style.color = 'var(--lime)';
+    
+    // Revert after 2 seconds
+    setTimeout(() => {
+      emailSpan.textContent = originalText;
+      emailSpan.style.color = '';
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
   });
 }
 
