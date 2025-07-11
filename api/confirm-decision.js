@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         
         <p>This decision has been added to your decision log.</p>
         <div style="text-align: center;">
-          <a href="/api/index" class="button">📋 View All Decisions</a>
+          <a href="/app" class="button">📋 View All Decisions</a>
         </div>
         
         <script>

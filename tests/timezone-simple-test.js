@@ -82,7 +82,7 @@ class TimezoneSimpleTest {
   }
 
   async testDecisionUIStructure() {
-    const response = await fetch(`${BASE_URL}/api/index`);
+    const response = await fetch(`${BASE_URL}/app`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch decision UI: ${response.status}`);

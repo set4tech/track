@@ -167,10 +167,10 @@ async function seedWitnessTestData() {
     
     console.log(`\n🎉 Successfully seeded ${WITNESS_TEST_DECISIONS.length} witness test decisions!`);
     console.log('\n💡 To test the filter:');
-    console.log('   1. View all decisions: /api/index');
-    console.log('   2. View only "My Decisions": /api/index?role=maker');
-    console.log('   3. Use alice@testcompany.com as the test user email');
+    console.log('   1. View all decisions: /app');
     
+    console.log('   2. View only "My Decisions": /app?role=maker');
+    console.log('   3. Use alice@testcompany.com as the test user email');
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);

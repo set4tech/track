@@ -7,7 +7,7 @@ import { getTagsForDecision } from '../lib/tag-extractor.js';
 
 export default async function handler(req, res) {
   try {
-    console.log('Starting index handler...');
+    console.log('Starting app handler...');
     const { team_id, tags, filter_mode = 'any', role, priority } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
