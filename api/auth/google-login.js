@@ -1,4 +1,9 @@
-import { verifyGoogleToken, findOrCreateUser, generateSessionToken, validateCSRFToken } from '../../lib/auth.js';
+import {
+  verifyGoogleToken,
+  findOrCreateUser,
+  generateSessionToken,
+  validateCSRFToken,
+} from '../../lib/auth.js';
 import { AUTH_CONFIG } from '../../lib/config.js';
 import cookie from 'cookie';
 
@@ -9,7 +14,7 @@ export default async function handler(req, res) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Sign in</title>
+        <title>Sign up</title>
         <meta name="google-signin-client_id" content="${AUTH_CONFIG.google.clientId}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,20 +45,8 @@ export default async function handler(req, res) {
       </head>
       <body>
         <div class="container">
-          <h2>Sign in</h2>
-          <div id="g_id_onload"
-               data-client_id="${AUTH_CONFIG.google.clientId}"
-               data-callback="handleCredentialResponse"
-               data-auto_prompt="false">
-          </div>
-          <div class="g_id_signin"
-               data-type="standard"
-               data-size="large"
-               data-theme="outline"
-               data-text="sign_in_with"
-               data-shape="rectangular"
-               data-logo_alignment="left">
-          </div>
+          <h2>Sign up</h2>
+          <div id="g_id_signin"></div>
         </div>
         
         <script>
@@ -62,6 +55,29 @@ export default async function handler(req, res) {
             const parts = value.split('; ' + name + '=');
             if (parts.length === 2) return parts.pop().split(';').shift();
           }
+          
+          // Initialize Google Sign-In
+          window.addEventListener('load', () => {
+            google.accounts.id.initialize({
+              client_id: '${AUTH_CONFIG.google.clientId}',
+              callback: handleCredentialResponse,
+              auto_select: false,
+              cancel_on_tap_outside: false
+            });
+            
+            // Render the button
+            google.accounts.id.renderButton(
+              document.getElementById("g_id_signin"),
+              { 
+                type: 'standard',
+                size: 'large',
+                theme: 'outline',
+                text: 'signup_with',
+                shape: 'rectangular',
+                logo_alignment: 'left'
+              }
+            );
+          });
           
           async function handleCredentialResponse(response) {
             try {
@@ -100,65 +116,60 @@ export default async function handler(req, res) {
       </body>
       </html>
     `;
-    
+
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(html);
   }
-  
+
   try {
     // Verify CSRF token
     const cookies = cookie.parse(req.headers.cookie || '');
     const csrfCookie = cookies[AUTH_CONFIG.csrf.cookieName];
     const csrfHeader = req.headers['x-csrf-token'];
-    
+
     if (!validateCSRFToken(csrfCookie, csrfHeader)) {
       return res.status(403).json({ error: 'Invalid CSRF token' });
     }
-    
+
     const { credential } = req.body;
-    
+
     if (!credential) {
       return res.status(400).json({ error: 'No credential provided' });
     }
-    
+
     // Verify the Google ID token
     const profile = await verifyGoogleToken(credential);
-    
+
     // Find or create user
     const user = await findOrCreateUser(profile);
-    
+
     // Generate session token
     const { token } = generateSessionToken(user);
-    
+
     // Set session cookie with explicit domain for dev environments
     const cookieOptions = {
       ...AUTH_CONFIG.jwt.cookieOptions,
       path: '/',
       // Remove domain restriction for better compatibility
-      domain: undefined
+      domain: undefined,
     };
-    
+
     // In development, ensure secure is false so the cookie works without HTTPS
     if (process.env.NODE_ENV !== 'production') {
       cookieOptions.secure = false;
     }
-    
-    res.setHeader('Set-Cookie', cookie.serialize(
-      AUTH_CONFIG.jwt.cookieName,
-      token,
-      cookieOptions
-    ));
-    
-    return res.status(200).json({ 
-      success: true, 
+
+    res.setHeader('Set-Cookie', cookie.serialize(AUTH_CONFIG.jwt.cookieName, token, cookieOptions));
+
+    return res.status(200).json({
+      success: true,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        provider: user.provider
-      }
+        provider: user.provider,
+      },
     });
-    
   } catch (error) {
     console.error('Google login error:', error);
     return res.status(401).json({ error: error.message });
