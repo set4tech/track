@@ -14,5 +14,15 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/public/index.html"
+      },
+      {
+        "source": "/:path((?!api/|public/).*)",
+        "destination": "/public/:path"
+      }
     ]
 }
