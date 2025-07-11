@@ -168,7 +168,7 @@ footer a:hover{border-color:var(--bg)}
       <a href="/privacy.html">Privacy</a>
       <a href="/terms.html">Terms</a>
       <a href="/support.html">Support</a>
-      <a href="/app">Dashboard</a>
+      <a href="/api/app">Dashboard</a>
     </nav>
   </div>
 </footer>
@@ -189,7 +189,7 @@ function generateCSRFToken() {
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'auth-success') {
     console.log('Authentication successful, redirecting to dashboard...');
-    window.location.href = '/api/index';
+    window.location.href = '/api/app';
   }
 });
 

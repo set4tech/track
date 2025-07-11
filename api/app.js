@@ -4,18 +4,46 @@ import { generateIntegratedAuthHTML } from '../lib/auth-ui.js';
 import {
   getDecisionsForUser,
   getDecisionsWithTags,
-  getAllAvailableTags,
   getTotalDecisionsCount,
 } from '../lib/decision-queries.js';
 import { generateDecisionHTML } from '../lib/ui/html-generator.js';
 
+// Helper function to get available tags from visible decisions
+function getAvailableTagsFromDecisions(decisionsWithTags) {
+  const tagMap = new Map();
+
+  decisionsWithTags.forEach((decision) => {
+    if (decision.tags && decision.tags.length > 0) {
+      decision.tags.forEach((tag) => {
+        if (tagMap.has(tag.id)) {
+          tagMap.get(tag.id).decision_count++;
+        } else {
+          tagMap.set(tag.id, {
+            id: tag.id,
+            name: tag.name,
+            description: tag.description,
+            decision_count: 1,
+          });
+        }
+      });
+    }
+  });
+
+  // Convert to array and sort by decision count (descending) then name
+  return Array.from(tagMap.values()).sort((a, b) => {
+    if (b.decision_count !== a.decision_count) {
+      return b.decision_count - a.decision_count;
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+
 export default async function handler(req, res) {
   try {
     console.log('Starting app handler...');
-    const { team_id, tags, filter_mode = 'any', role, priority } = req.query;
+    const { team_id, tags, filter_mode = 'any', priority } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
-
     // Check authentication
     const auth = await requireAuth(req, res);
     console.log('Auth check complete:', auth.authenticated);
@@ -34,8 +62,8 @@ export default async function handler(req, res) {
     // Fetch tags for each decision
     const decisionsWithTags = await getDecisionsWithTags(rows);
 
-    // Get all available tags for the filter
-    const availableTags = await getAllAvailableTags();
+    // Get only tags that appear in the user's visible decisions
+    const availableTags = getAvailableTagsFromDecisions(decisionsWithTags);
 
     // Get total count of user's decisions for display
     const totalDecisions = await getTotalDecisionsCount(auth);
@@ -49,7 +77,6 @@ export default async function handler(req, res) {
       totalDecisions,
       tagIds,
       filterMode: filter_mode,
-      role,
       generateIntegratedAuthHTML,
     });
     res.setHeader('Content-Type', 'text/html');
