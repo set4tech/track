@@ -112,7 +112,7 @@ export default async function handler(req, res) {
     
     // Check if bot is included (either CC or TO)
     const botDomain = '@bot.set4.io';
-    const botPrefixes = ['decisions', 'decision']; // Accept both singular and plural
+    const botPrefixes = ['decisions', 'decision', 'me']; // Accept decisions, decision, and me
     const isBotIncluded = botPrefixes.some(prefix => 
       (cc && cc.toLowerCase().includes(prefix) && cc.toLowerCase().includes(botDomain)) || 
       (to && to.toLowerCase().includes(prefix) && to.toLowerCase().includes(botDomain))
