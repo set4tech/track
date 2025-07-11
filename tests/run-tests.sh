@@ -21,7 +21,7 @@ if [ -f ".env.local" ]; then
 fi
 
 # Check for required environment variables
-REQUIRED_VARS=("POSTGRES_URL" "SENDGRID_API_KEY" "SENDER_EMAIL" "OPENAI_API_KEY")
+REQUIRED_VARS=("POSTGRES_URL" "SENDGRID_API_KEY" "SENDER_EMAIL" "OPENAI_API_KEY" "ENCRYPTION_KEY")
 MISSING_VARS=()
 
 for var in "${REQUIRED_VARS[@]}"; do
@@ -66,7 +66,33 @@ mkdir -p tests
 echo "🧪 Running integration tests..."
 echo ""
 
-if node tests/integration-test.js; then
+TEST_FAILED=0
+
+# Run main integration tests
+if ! node tests/integration-test.js; then
+    TEST_FAILED=1
+fi
+
+# Run Gmail-specific tests if ENCRYPTION_KEY is set
+if [ ! -z "$ENCRYPTION_KEY" ]; then
+    echo ""
+    echo "🧪 Running Gmail integration tests..."
+    
+    # Run encryption tests
+    if ! node tests/test-encryption.js; then
+        TEST_FAILED=1
+    fi
+    
+    # Run Gmail integration tests
+    if ! node tests/gmail-integration.test.js; then
+        TEST_FAILED=1
+    fi
+else
+    echo ""
+    echo "⚠️  Skipping Gmail tests (ENCRYPTION_KEY not set)"
+fi
+
+if [ $TEST_FAILED -eq 0 ]; then
     echo ""
     echo "✅ All integration tests completed successfully!"
     echo "🎉 Your email-to-threads app is working correctly!"
@@ -86,5 +112,10 @@ echo "   - Confirmation flow ✅"
 echo "   - Query functionality ✅"
 echo "   - Duplicate handling ✅"
 echo "   - API endpoints ✅"
+if [ ! -z "$ENCRYPTION_KEY" ]; then
+    echo "   - Gmail encryption ✅"
+    echo "   - Gmail API endpoints ✅"
+    echo "   - Gmail database schema ✅"
+fi
 echo ""
 echo "🚀 Ready for production use!"

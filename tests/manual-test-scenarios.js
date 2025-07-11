@@ -116,6 +116,80 @@ Meeting details:
 
 Please adjust your calendars accordingly. The decision confirmation will show the time in your local timezone.`,
     headers: `Message-ID: <timezone-test-${Date.now()}@company.com>\nDate: ${new Date().toUTCString()}`
+  },
+
+  // Test Gmail sync with filtered query
+  gmail_filter_test: {
+    from: 'dev@set4.io',
+    to: 'team@set4.io',
+    cc: 'decisions@bot.set4.io',
+    subject: 'Gmail Integration Test - Filtered Decision',
+    text: `Testing Gmail sync with server-side filtering.
+
+Decision: We will implement the following Gmail filters:
+- Only sync emails from/to @set4.io domain
+- Exclude promotional and social categories
+- Sync only INBOX and SENT labels
+
+This ensures we only process relevant business emails.`,
+    headers: `Message-ID: <gmail-filter-${Date.now()}@set4.io>\nDate: ${new Date().toUTCString()}`
+  },
+
+  // Test Gmail decision extraction
+  gmail_decision_extract: {
+    from: 'product@company.com',
+    to: 'engineering@company.com',
+    cc: 'decisions@bot.set4.io',
+    subject: 'Re: API Rate Limiting Strategy',
+    text: `Following up on our discussion about API rate limits.
+
+Approved. Let's implement the tiered rate limiting as proposed:
+- Free tier: 100 requests/hour
+- Pro tier: 1000 requests/hour
+- Enterprise: Custom limits
+
+Please proceed with implementation by end of week.`,
+    headers: `Message-ID: <gmail-extract-${Date.now()}@company.com>\nDate: ${new Date().toUTCString()}`
+  },
+
+  // Test Gmail sync with large thread
+  gmail_thread_test: {
+    from: 'manager@company.com',
+    to: 'team@company.com',
+    cc: 'decisions@bot.set4.io',
+    subject: 'Re: Re: Re: Project Timeline Discussion',
+    text: `After all the back and forth in this thread, here's the final decision:
+
+We're going with Option B - two-phase rollout:
+- Phase 1: Core features by March 1st
+- Phase 2: Advanced features by April 15th
+
+This gives us buffer time and reduces risk.
+
+Thanks everyone for the input!`,
+    headers: `Message-ID: <gmail-thread-${Date.now()}@company.com>\nDate: ${new Date().toUTCString()}\nIn-Reply-To: <original-thread@company.com>\nReferences: <original-thread@company.com> <reply1@company.com> <reply2@company.com>`
+  },
+
+  // Test Gmail with attachment reference
+  gmail_attachment_decision: {
+    from: 'finance@company.com',
+    to: 'leadership@company.com',
+    cc: 'decisions@bot.set4.io',
+    subject: 'Budget Approval - See Attached',
+    text: `Team,
+
+I've reviewed the Q2 budget proposal (attached as Q2_Budget_Final.xlsx).
+
+Decision: Budget is approved with the following conditions:
+- Marketing spend capped at $50K
+- Engineering can proceed with all planned hires
+- Travel budget reduced by 20%
+
+Please see the attached spreadsheet for detailed line items.
+
+Best,
+CFO`,
+    headers: `Message-ID: <gmail-attachment-${Date.now()}@company.com>\nDate: ${new Date().toUTCString()}`
   }
 };
 
