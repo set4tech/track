@@ -1,11 +1,4 @@
 {
-    "redirects": [
-      {
-        "source": "/",
-        "destination": "/api/index",
-        "permanent": false
-      }
-    ],
     "functions": {
       "api/*.js": {
         "maxDuration": 10
