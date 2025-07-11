@@ -5,30 +5,35 @@ A collaborative decision tracking platform that captures, organizes, and manages
 ## Features
 
 ### Core Functionality
+
 - **Email-based Decision Capture**: CC `decisions@bot.set4.io` to automatically extract and track decisions
 - **AI-powered Extraction**: Uses OpenAI GPT-4 to intelligently parse decision content from emails
 - **Confirmation Workflow**: Decision makers receive confirmation emails to verify captured decisions
 - **Thread Tracking**: Maintains context by grouping related decisions by email thread
 
 ### Authentication & Authorization
+
 - **Multi-provider OAuth**: Supports Google and Microsoft authentication
 - **Session Management**: Secure JWT-based sessions with 30-day duration
 - **User-specific Views**: Each user sees only their own decisions
 - **Protected Routes**: API endpoints require authentication
 
 ### Organization & Discovery
+
 - **Tagging System**: Automatic and manual tagging of decisions for easy categorization
 - **Advanced Filtering**: Filter decisions by tags with "Match Any" or "Match All" logic
 - **Full-text Search**: Query decisions by content or metadata
 - **Export Capabilities**: Download decisions as PDF for reporting
 
 ### User Interface
+
 - **Responsive Web App**: Modern UI for viewing and managing decisions
 - **Expandable Cards**: Click decisions to view full details in an overlay
 - **Tag Management**: Add, remove, and filter by tags directly in the UI
 - **Bulk Operations**: Delete decisions individually or in bulk
 
 ### Integrations
+
 - **Slack Integration**: Post decisions to Slack channels automatically
 - **Email Routing**: Conditional routing based on decision content
 - **Webhook Support**: Extensible architecture for custom integrations
@@ -36,12 +41,14 @@ A collaborative decision tracking platform that captures, organizes, and manages
 ## API Endpoints
 
 ### Authentication
+
 - `GET /api/auth/login` - Initiate OAuth login flow
 - `GET /api/auth/callback` - OAuth callback handler
 - `GET /api/auth/logout` - Logout and clear session
 - `GET /api/auth/check` - Verify authentication status
 
 ### Decision Management
+
 - `GET /` - Main UI (requires authentication)
 - `GET /api/decisions-ui` - Decision viewing interface
 - `GET /api/decisions-with-tags` - Fetch decisions with tag information
@@ -50,16 +57,19 @@ A collaborative decision tracking platform that captures, organizes, and manages
 - `DELETE /api/delete-decision` - Delete a specific decision
 
 ### Tagging
+
 - `GET /api/tags` - List all available tags
 - `POST /api/tags` - Add tags to a decision
 - `DELETE /api/tags` - Remove tags from a decision
 
 ### Slack Integration
+
 - `POST /api/slack/events` - Slack event webhook
 - `POST /api/slack/actions` - Slack interactive components
 - `GET /api/slack/oauth` - Slack OAuth callback
 
 ### Utilities
+
 - `GET /api/setup-decisions-db` - Initialize database (first-time setup)
 - `POST /api/email-router` - Route emails based on rules
 
@@ -97,12 +107,14 @@ SLACK_SIGNING_SECRET=your_slack_signing_secret
 The application uses PostgreSQL with the following main tables:
 
 ### Core Tables
+
 - **decisions** - Main table storing decision content, confirmation status, and metadata
 - **users** - User accounts with OAuth provider information
 - **tags** - Available tags for categorizing decisions
 - **decision_tags** - Many-to-many relationship between decisions and tags
 
 ### Key Columns in Decisions Table
+
 - `id` - Unique identifier
 - `message_id` - Email message ID for deduplication
 - `thread_id` - Groups related decisions
@@ -116,6 +128,7 @@ The application uses PostgreSQL with the following main tables:
 ## Setup & Development
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker Desktop (for local development)
 - PostgreSQL (if not using Docker)
@@ -123,19 +136,22 @@ The application uses PostgreSQL with the following main tables:
 ### Local Development Setup
 
 1. **Clone and Install**
+
 ```bash
 git clone [repository-url]
-cd track2
+cd [project-directory]
 npm install
 ```
 
 2. **Environment Configuration**
+
 ```bash
 cp env.local.template .env.local
 # Edit .env.local with your configuration
 ```
 
 3. **Database Setup (Docker)**
+
 ```bash
 npm run db:start    # Start PostgreSQL in Docker
 npm run db:migrate  # Run database migrations
@@ -143,6 +159,7 @@ npm run seed        # Optional: Add sample data
 ```
 
 4. **Run Tests**
+
 ```bash
 npm test                 # Run all tests
 npm run test:integration # Integration tests only
@@ -198,6 +215,7 @@ npm run db:migrate:create -- descriptive-name
 ## Architecture
 
 ### Technology Stack
+
 - **Runtime**: Node.js with ES6 modules
 - **Framework**: Vercel Serverless Functions
 - **Database**: PostgreSQL (Neon for production)
@@ -206,6 +224,7 @@ npm run db:migrate:create -- descriptive-name
 - **Authentication**: OAuth 2.0 (Google & Microsoft)
 
 ### Project Structure
+
 ```
 /api                    # Serverless function endpoints
   /auth                 # Authentication endpoints
