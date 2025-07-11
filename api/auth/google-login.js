@@ -113,6 +113,11 @@ export default async function handler(req, res) {
       domain: undefined
     };
     
+    // In development, ensure secure is false so the cookie works without HTTPS
+    if (process.env.NODE_ENV !== 'production') {
+      cookieOptions.secure = false;
+    }
+    
     res.setHeader('Set-Cookie', cookie.serialize(
       AUTH_CONFIG.jwt.cookieName,
       token,

@@ -133,11 +133,21 @@ export default async function handler(req, res) {
     // Generate session token
     const { token } = generateSessionToken(user);
     
-    // Set session cookie
+    // Set session cookie with proper options for development
+    const cookieOptions = {
+      ...AUTH_CONFIG.jwt.cookieOptions,
+      path: '/'
+    };
+    
+    // In development, ensure secure is false so the cookie works without HTTPS
+    if (process.env.NODE_ENV !== 'production') {
+      cookieOptions.secure = false;
+    }
+    
     res.setHeader('Set-Cookie', cookie.serialize(
       AUTH_CONFIG.jwt.cookieName,
       token,
-      AUTH_CONFIG.jwt.cookieOptions
+      cookieOptions
     ));
     
     return res.status(200).json({ 
