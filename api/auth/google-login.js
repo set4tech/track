@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Sign in with Google</title>
+        <title>Sign in</title>
         <meta name="google-signin-client_id" content="${AUTH_CONFIG.google.clientId}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       </head>
       <body>
         <div class="container">
-          <h2>Sign in with Google</h2>
+          <h2>Sign in</h2>
           <div id="g_id_onload"
                data-client_id="${AUTH_CONFIG.google.clientId}"
                data-callback="handleCredentialResponse"

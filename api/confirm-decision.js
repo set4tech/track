@@ -62,10 +62,10 @@ export default async function handler(req, res) {
             * { box-sizing: border-box; }
             body { font-family: 'Space Mono', monospace; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--bg); color: var(--fg); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
             h1, h2 { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; }
-            .success { background: var(--fg); color: var(--bg); padding: 20px; text-align: center; border: 4px solid var(--fg); }
+            .success { background: var(--green); color: var(--bg); padding: 20px; text-align: center; border: 4px solid var(--green); }
             .details { background: var(--bg); padding: 20px; margin: 20px 0; border: 4px solid var(--fg); }
             .button { background: var(--fg); color: var(--bg); padding: 10px 20px; text-decoration: none; display: inline-block; margin: 10px 5px; transition: transform 0.15s ease-in-out; font-weight: 700; border: 4px solid var(--fg); }
-            .button:hover { transform: translateY(-4px); }
+            .button:hover { background: var(--green); border-color: var(--green); transform: translateY(-4px); }
             a { color: inherit; text-decoration: none; }
             a:focus-visible { outline: 2px dashed var(--orange); outline-offset: 2px; }
           </style>
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
           * { box-sizing: border-box; }
           body { font-family: 'Space Mono', monospace; max-width: 600px; margin: 50px auto; padding: 20px; background: #ffffff; color: #000000; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
           h1 { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; }
-          .error { background: #000000; color: #ffffff; padding: 20px; text-align: center; border: 4px solid #000000; }
+          .error { background: #ED6506; color: #ffffff; padding: 20px; text-align: center; border: 4px solid #ED6506; }
         </style>
       </head>
       <body>
