@@ -12,9 +12,34 @@ export default async function handler(req, res) {
         <title>Sign in with Google</title>
         <meta name="google-signin-client_id" content="${AUTH_CONFIG.google.clientId}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
+        <style>
+        * { box-sizing: border-box; }
+        body { 
+          display: flex; align-items: center; justify-content: center; 
+          height: 100vh; margin: 0; 
+          font-family: 'Space Mono', monospace; 
+          background: #ffffff; color: #000000;
+          font-size: 16px; line-height: 1.5;
+        }
+        h2 { 
+          font-family: 'Hedvig Letters Serif', serif; 
+          font-weight: 400; 
+          font-size: 2rem;
+          margin-bottom: 2rem;
+        }
+        .container {
+          text-align: center;
+          padding: 2rem;
+          border: 4px solid #000000;
+          background: #ffffff;
+        }
+      </style>
       </head>
-      <body style="display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: -apple-system, sans-serif;">
-        <div style="text-align: center;">
+      <body>
+        <div class="container">
           <h2>Sign in with Google</h2>
           <div id="g_id_onload"
                data-client_id="${AUTH_CONFIG.google.clientId}"

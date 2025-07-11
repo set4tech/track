@@ -23,7 +23,7 @@ export default async function handler(req, res) {
           <title>Decision Not Found</title>
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
           <style>
             body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
             h1 { font-family: 'Hedvig Letters Serif', serif; }
@@ -49,25 +49,25 @@ export default async function handler(req, res) {
         <title>Decision Confirmed</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
         <style>
             :root {
-              --primary: #00CC88;
-              --secondary: #003B1B;
-              --tertiary: #BBE835;
-              --accent: #ED6506;
-              --background: #ffffff;
-              --foreground: #003B1B;
-              --muted: #f0fdf4;
-              --muted-foreground: #16a34a;
-              --border: #d1fae5;
+              --green: #00CC88;
+              --dark-green: #003B1B;
+              --lime: #BBE835;
+              --orange: #ED6506;
+              --bg: #ffffff;
+              --fg: #000000;
             }
-            body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--muted); color: var(--foreground); }
-            h1, h2 { font-family: 'Hedvig Letters Serif', serif; }
-            .success { background: var(--primary); color: white; padding: 20px; border-radius: 8px; text-align: center; }
-            .details { background: var(--background); padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid var(--border); }
-            .button { background: var(--secondary); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 5px; transition: background 0.2s; font-weight: 500; }
-            .button:hover { background: var(--accent); }
+            * { box-sizing: border-box; }
+            body { font-family: 'Space Mono', monospace; max-width: 600px; margin: 50px auto; padding: 20px; background: var(--bg); color: var(--fg); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+            h1, h2 { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; }
+            .success { background: var(--fg); color: var(--bg); padding: 20px; text-align: center; border: 4px solid var(--fg); }
+            .details { background: var(--bg); padding: 20px; margin: 20px 0; border: 4px solid var(--fg); }
+            .button { background: var(--fg); color: var(--bg); padding: 10px 20px; text-decoration: none; display: inline-block; margin: 10px 5px; transition: transform 0.15s ease-in-out; font-weight: 700; border: 4px solid var(--fg); }
+            .button:hover { transform: translateY(-4px); }
+            a { color: inherit; text-decoration: none; }
+            a:focus-visible { outline: 2px dashed var(--orange); outline-offset: 2px; }
           </style>
       </head>
       <body>
@@ -112,11 +112,12 @@ export default async function handler(req, res) {
         <title>Error</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
         <style>
-          body { font-family: 'Instrument Sans', -apple-system, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-          h1 { font-family: 'Hedvig Letters Serif', serif; }
-          .error { background: #dc2626; color: white; padding: 20px; border-radius: 8px; text-align: center; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Space Mono', monospace; max-width: 600px; margin: 50px auto; padding: 20px; background: #ffffff; color: #000000; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+          h1 { font-family: 'Hedvig Letters Serif', serif; font-weight: 400; }
+          .error { background: #000000; color: #ffffff; padding: 20px; text-align: center; border: 4px solid #000000; }
         </style>
       </head>
       <body>

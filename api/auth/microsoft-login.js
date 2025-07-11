@@ -11,16 +11,47 @@ export default async function handler(req, res) {
       <head>
         <title>Sign in with Microsoft</title>
         <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
-      </head>
-      <body style="display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: -apple-system, sans-serif;">
-        <div style="text-align: center;">
-          <h2>Sign in with Microsoft</h2>
-          <button onclick="signIn()" style="
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Hedvig+Letters+Serif:opsz@12..24&display=swap" rel="stylesheet">
+        <style>
+          * { box-sizing: border-box; }
+          body { 
+            display: flex; align-items: center; justify-content: center; 
+            height: 100vh; margin: 0; 
+            font-family: 'Space Mono', monospace; 
+            background: #ffffff; color: #000000;
+            font-size: 16px; line-height: 1.5;
+          }
+          h2 { 
+            font-family: 'Hedvig Letters Serif', serif; 
+            font-weight: 400; 
+            font-size: 2rem;
+            margin-bottom: 2rem;
+          }
+          .container {
+            text-align: center;
+            padding: 2rem;
+            border: 4px solid #000000;
+            background: #ffffff;
+          }
+          .sign-in-btn {
             display: flex; align-items: center; gap: 10px;
-            padding: 10px 20px; font-size: 16px;
-            background: white; border: 1px solid #8c8c8c; border-radius: 8px;
-            cursor: pointer; color: #5e5e5e;
-          ">
+            padding: 12px 24px; font-size: 16px; font-weight: 700;
+            background: #ffffff; border: 4px solid #000000;
+            cursor: pointer; color: #000000;
+            transition: transform 0.15s ease-in-out;
+            margin: 0 auto;
+          }
+          .sign-in-btn:hover {
+            transform: translateY(-4px);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>Sign in with Microsoft</h2>
+          <button onclick="signIn()" class="sign-in-btn">
             <svg width="20" height="20" viewBox="0 0 21 21">
               <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
               <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
