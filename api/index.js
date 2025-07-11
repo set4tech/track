@@ -1,14 +1,18 @@
 import { getConfig } from '../lib/config.js';
 import { requireAuth, generateCSRFToken } from '../lib/auth.js';
 import { generateIntegratedAuthHTML } from '../lib/auth-ui.js';
-import { getDecisionsForUser, getDecisionsWithTags, getAllAvailableTags, getTotalDecisionsCount } from '../lib/decision-queries.js';
+import {
+  getDecisionsForUser,
+  getDecisionsWithTags,
+  getAllAvailableTags,
+  getTotalDecisionsCount,
+} from '../lib/decision-queries.js';
 import { generateDecisionHTML } from '../lib/ui/html-generator.js';
-import { getTagsForDecision } from '../lib/tag-extractor.js';
 
 export default async function handler(req, res) {
   try {
     console.log('Starting index handler...');
-    const { team_id, tags, filter_mode = 'any', role } = req.query;
+    const { team_id, tags, filter_mode = 'any', role, priority } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
 
@@ -20,22 +24,24 @@ export default async function handler(req, res) {
     const csrfToken = generateCSRFToken();
 
     // Parse tags from query string (can be comma-separated or array)
-    const tagIds = tags ? (Array.isArray(tags) ? tags : tags.split(',')).map(id => parseInt(id, 10)) : [];
-    
+    const tagIds = tags
+      ? (Array.isArray(tags) ? tags : tags.split(',')).map((id) => parseInt(id, 10))
+      : [];
+
     // Fetch decisions for user
-    const rows = await getDecisionsForUser(auth, team_id, tagIds, filter_mode, role);
-    
+    const rows = await getDecisionsForUser(auth, team_id, tagIds, filter_mode, priority);
+
     // Fetch tags for each decision
     const decisionsWithTags = await getDecisionsWithTags(rows);
-    
+
     // Get all available tags for the filter
     const availableTags = await getAllAvailableTags();
-    
+
     // Get total count of user's decisions for display
     const totalDecisions = await getTotalDecisionsCount(auth);
-    
+
     const html = generateDecisionHTML({
-      config,
+      config: { ...config, priorityFilter: priority },
       auth,
       csrfToken,
       decisionsWithTags,
@@ -44,7 +50,7 @@ export default async function handler(req, res) {
       tagIds,
       filterMode: filter_mode,
       role,
-      generateIntegratedAuthHTML
+      generateIntegratedAuthHTML,
     });
     res.setHeader('Content-Type', 'text/html');
     res.status(200).send(html);
