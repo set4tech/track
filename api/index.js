@@ -8,7 +8,7 @@ import { getTagsForDecision } from '../lib/tag-extractor.js';
 export default async function handler(req, res) {
   try {
     console.log('Starting index handler...');
-    const { team_id, tags, filter_mode = 'any', role } = req.query;
+    const { team_id, tags, filter_mode = 'any', role, priority } = req.query;
     const config = getConfig();
     console.log('Config loaded:', config.environment);
 
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const tagIds = tags ? (Array.isArray(tags) ? tags : tags.split(',')).map(id => parseInt(id, 10)) : [];
     
     // Fetch decisions for user
-    const rows = await getDecisionsForUser(auth, team_id, tagIds, filter_mode);
+    const rows = await getDecisionsForUser(auth, team_id, tagIds, filter_mode, priority);
     
     // Fetch tags for each decision
     const decisionsWithTags = await getDecisionsWithTags(rows);
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     const totalDecisions = await getTotalDecisionsCount(auth);
     
     const html = generateDecisionHTML({
-      config,
+      config: { ...config, priorityFilter: priority },
       auth,
       csrfToken,
       decisionsWithTags,
