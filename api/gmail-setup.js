@@ -1,12 +1,4 @@
-import { createHandler } from '../lib/handler.js';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-export default createHandler(async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -287,4 +279,4 @@ function startGmailSync() {
 
   res.setHeader('Content-Type', 'text/html');
   res.status(200).send(html);
-});
+}
