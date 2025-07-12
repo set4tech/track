@@ -205,9 +205,6 @@ h1 {
       <li>Build your initial decision database</li>
       <li>Show you how the system works with real data</li>
     </ul>
-    
-    <p><strong>Why start with the last month?</strong><br>
-    This gives you immediate value by capturing recent decisions while keeping the initial sync quick and manageable.</p>
   </div>
   
   <button class="btn" onclick="startGmailSync()">
