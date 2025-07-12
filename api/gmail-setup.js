@@ -1,7 +1,12 @@
-export default async function handler(req, res) {
+import { generateCSRFToken } from '../lib/auth.js';
+
+export default function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Generate CSRF token for the page
+  const csrfToken = generateCSRFToken();
 
   // Serve the Gmail setup HTML page
   const html = `<!DOCTYPE html>
@@ -222,6 +227,10 @@ h1 {
 </div>
 
 <script>
+// Set CSRF token cookie - only use secure flag if on HTTPS
+const isSecure = window.location.protocol === 'https:';
+document.cookie = 'track1_csrf=${csrfToken}; path=/; samesite=lax' + (isSecure ? '; secure' : '');
+
 function startGmailSync() {
   const loading = document.getElementById('loading');
   const error = document.getElementById('error');
