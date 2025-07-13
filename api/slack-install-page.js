@@ -40,13 +40,20 @@ export default async function handler(req, res) {
                 border: 4px solid var(--fg);
             }
             .install-btn { 
-                background: var(--fg); color: var(--bg); padding: 15px 30px; 
-                text-decoration: none; display: inline-block;
+                background: var(--fg); color: var(--bg);
+                padding: 1.2rem 2.4rem; font-size: 1.1rem;
+                text-decoration: none; display: inline-flex; align-items: center;
+                gap: 0.5rem;
                 font-weight: 700; margin: 20px 0; transition: transform 0.15s ease-in-out;
                 border: 4px solid var(--fg);
             }
             .install-btn:hover { 
-                transform: translateY(-4px);
+                background: var(--green); color: var(--bg); 
+                border-color: var(--green); transform: translateY(-4px);
+            }
+            .slack-logo {
+                width: 20px;
+                height: 20px;
             }
             a { color: inherit; text-decoration: none; }
             a:focus-visible { outline: 2px dashed var(--orange); outline-offset: 2px; }
@@ -61,6 +68,12 @@ export default async function handler(req, res) {
             <p><small>Join thousands of teams already using Decision Tracker</small></p>
             
             <a href="https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=channels:history,chat:write,commands,users:read&redirect_uri=${encodeURIComponent(redirectUri)}" class="install-btn">
+                <svg class="slack-logo" viewBox="0 0 122.8 122.8" fill="currentColor">
+                    <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z"/>
+                    <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z"/>
+                    <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z"/>
+                    <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z"/>
+                </svg>
                 Add to Slack
             </a>
             
