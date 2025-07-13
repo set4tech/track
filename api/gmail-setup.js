@@ -196,19 +196,19 @@ h1 {
   <h1>Welcome to Decision Tracker!</h1>
   
   <div class="sync-option">
-    <h2>Sync your recent decisions</h2>
-    <p>Let's import your decisions from the last month to get started. This will:</p>
+    <h2>Set up automatic email forwarding</h2>
+    <p>Let's connect your Gmail to automatically forward decision emails. This will:</p>
     
     <ul class="benefits">
-      <li>Analyze emails CC'd to me@bot.set4.io</li>
+      <li>Create a Gmail filter for emails where you're CC'd</li>
+      <li>Automatically forward them to decisions@bot.set4.io</li>
       <li>Extract decisions automatically using AI</li>
-      <li>Build your initial decision database</li>
-      <li>Show you how the system works with real data</li>
+      <li>No manual forwarding needed going forward</li>
     </ul>
   </div>
   
   <button class="btn" onclick="startGmailSync()">
-    Connect Gmail & Sync Last Month
+    Connect Gmail & Set Up Forwarding
   </button>
   
   <div class="loading" id="loading">
@@ -253,18 +253,32 @@ function startGmailSync() {
       console.log('Gmail authentication successful');
       
       // Auth successful, the backend will handle the sync
+      loading.innerHTML = '<div class="spinner"></div><p>Gmail connected! Setting up forwarding...</p>';
+      
       // Redirect to dashboard after a short delay
       setTimeout(() => {
         window.location.href = '/api/app?gmail_syncing=true';
       }, 1500);
+    } else if (event.data && event.data.type === 'gmail-auth-error') {
+      console.error('Gmail authentication failed:', event.data.error);
+      loading.classList.remove('show');
+      
+      let errorMessage = event.data.message || 'Gmail connection failed';
+      if (event.data.error === 'invalid_request') {
+        errorMessage += '. Your email may not be added as a test user. Please contact your administrator.';
+      }
+      
+      error.textContent = errorMessage;
+      error.classList.add('show');
     }
   });
   
   // Check if auth window closed
   const checkClosed = setInterval(() => {
-    if (authWindow && authWindow.closed) {
-      clearInterval(checkClosed);
-      loading.classList.remove('show');
+    try {
+      if (authWindow && authWindow.closed) {
+        clearInterval(checkClosed);
+        loading.classList.remove('show');
       
       // Check if we got the success message
       // If not, show an error
@@ -275,6 +289,9 @@ function startGmailSync() {
           error.classList.add('show');
         }
       }, 500);
+    }
+    } catch (e) {
+      // Ignore COOP errors when checking if window is closed
     }
   }, 1000);
 }
