@@ -19,6 +19,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Query must be at least 2 characters' });
     }
 
+    // Validate type parameter
+    const validTypes = ['decisions', 'emails', 'bodies', 'all'];
+    if (type && !validTypes.includes(type)) {
+      return res.status(400).json({ error: `Invalid type parameter. Must be one of: ${validTypes.join(', ')}` });
+    }
+
     const limitNum = Math.min(parseInt(limit) || 50, 100);
     const offsetNum = parseInt(offset) || 0;
 
